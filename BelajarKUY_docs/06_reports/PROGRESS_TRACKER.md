@@ -4,7 +4,7 @@
 
 ---
 
-> **Update terakhir:** 14 Mei 2026 — 02:00 WIB oleh Kiro (AI Agent)
+> **Update terakhir:** 17 Mei 2026 — 21:06 WIB oleh Antigravity (AI Agent) — Albariqi Tarigan session
 
 ---
 
@@ -14,7 +14,7 @@
 |-------|----------|--------|
 | Project Setup | 100% | 🟢 Selesai |
 | Database (Migrations + Models) | 100% | 🟢 Selesai |
-| Auth System | 0% | 🔴 Belum |
+| Auth System | 70% | 🟡 On Progress |
 | Landing Page | 0% | 🔴 Belum |
 | Category CRUD | 0% | 🔴 Belum |
 | Course CRUD (Instructor) | 0% | 🔴 Belum |
@@ -25,7 +25,7 @@
 | Review & Rating | 0% | 🔴 Belum |
 | Coupon System | 0% | 🔴 Belum |
 | Site Settings | 0% | 🔴 Belum |
-| **OVERALL** | **15%** | **🟡 On Progress** |
+| **OVERALL** | **25%** | **🟡 On Progress** |
 
 ---
 
@@ -42,7 +42,8 @@
 
 ## 🔄 SEDANG DIKERJAKAN
 
-_(Belum ada item yang sedang dikerjakan)_
+- Fitur Auth System — Role-based redirect post-login + post-register ✅
+- Buat dashboard placeholder untuk Admin, Instructor, Student ✅
 
 ---
 
@@ -55,12 +56,14 @@ _(Belum ada item yang sedang dikerjakan)_
 - [x] ERD HTML di BelajarKUY_docs
 - [x] Create all Eloquent models (19 models dengan relationships + scopes)
 - [x] Create database seeders & factories (19 factories + 5 seeders, verified end-to-end)
-- [ ] Create database seeders
-- [ ] Install & configure Breeze
-- [ ] Implement RoleMiddleware
-- [ ] Google OAuth setup
-- [ ] Separate login pages per role
-- [ ] Post-login redirect logic
+- [x] Install & configure Breeze (sudah terinstall + scaffolded)
+- [x] Implement RoleMiddleware (alias 'role', registered di bootstrap/app.php)
+- [x] Google OAuth setup
+- [x] Post-login redirect logic (match role → dashboard)
+- [x] Post-register redirect logic (match role → dashboard)
+- [x] Role selection di form register (Student / Instructor)
+- [ ] Separate login pages per role (admin/login, instructor/login — next)
+- [ ] Course CRUD (instructor) — Phase P5
 
 ### Phase 2: Core Features
 - [ ] Main layout (app.blade.php)
@@ -160,6 +163,31 @@ _(Belum ada item yang sedang dikerjakan)_
 - Branch: `docs/audit-cleanup`
 - Status: Documentation production-ready. AI agents bisa execute task tanpa ambiguitas.
 - Next: Phase 2 kickoff — Auth System (Albariqi)
+
+### Session 6 — 15 Mei 2026 (Antigravity)
+- Executed: Setup Google OAuth pada `GoogleController.php` dan update dependencies
+- Branch: Pushed ke `auth` dan di-merge ke `main`
+- Status: Google OAuth setup selesai.
+- Next: Lanjutkan fitur Auth System lainnya (Install Breeze & RoleMiddleware).
+
+### Session 7 — 17 Mei 2026 (Antigravity) — Albariqi Tarigan
+- Verified: Database seeders DONE (5 seeders + 19 factories, verified end-to-end dari session sebelumnya)
+- Verified: Laravel Breeze SUDAH terinstall & scaffolded (auth controllers, views, routes/auth.php)
+- Implemented: `RoleMiddleware` alias `'role'` didaftarkan di `bootstrap/app.php` via `$middleware->alias()`
+- Updated: `RegisteredUserController` — tambah validasi field `role` (user/instructor), redirect post-register per role
+- Updated: `resources/views/auth/register.blade.php` — tambah role selection UI (kartu radio Siswa/Instruktur)
+- Updated: `AuthenticatedSessionController` — sudah punya redirect per role dari session sebelumnya ✅
+- Created: `app/Http/Controllers/Backend/Admin/DashboardController.php` — stats platform
+- Created: `app/Http/Controllers/Backend/Instructor/DashboardController.php` — stats instructor + daftar kursus
+- Created: `app/Http/Controllers/Backend/Student/DashboardController.php` — stats + enrolled courses (via enrollments table)
+- Created: `resources/views/backend/admin/dashboard.blade.php`
+- Created: `resources/views/backend/instructor/dashboard.blade.php`
+- Created: `resources/views/backend/student/dashboard.blade.php`
+- Updated: `routes/web.php` — role-protected routes (role:admin, role:instructor, role:user) + /dashboard smart redirect
+- Branch: `feature/auth-system` (disarankan)
+- Status: Auth System Phase P2 70% done. RoleMiddleware ✅ Breeze ✅ Dashboard per role ✅
+- Next: Separate login pages per role (admin/login, instructor/login) — Albariqi
+- Report: `06_reports/REPORT_2026-05-17_AUTH_SYSTEM.md`
 
 ---
 

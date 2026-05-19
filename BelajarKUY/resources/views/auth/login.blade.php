@@ -44,4 +44,10 @@
             </x-primary-button>
         </div>
     </form>
+
+    <a href="{{ route('auth.google') }}"
+        class="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 mt-4">
+        Login with Google
+    </a>
+
 </x-guest-layout>

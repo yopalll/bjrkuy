@@ -365,18 +365,44 @@ NEXT: [P8] Integrasi Midtrans Snap untuk checkout.
 
 ## 8. CARA UPDATE PROGRESS & LAPORAN
 
-### Progress Tracker
+> ⛔ **MANDATORY** — Semua AI agent WAJIB menjalankan semua langkah di bawah ini setelah selesai mengerjakan task, SEBELUM melakukan `git push`. Tidak ada pengecualian.
 
-Setelah task apapun selesai, update `06_reports/PROGRESS_TRACKER.md`:
+### Step 1: Update `04_plans/TASK_DISTRIBUTION.md`
 
-1. Centang checkbox di section Phase yang sesuai
-2. Update persentase di summary
-3. Tambahkan entry di Session Logs dengan timestamp + inisial
-4. Dokumentasikan known issues jika ada
+Ganti status setiap task yang diselesaikan:
 
-### Daily Report
+```
+☐ Task belum dikerjakan   →   ✅ Task selesai (tambah keterangan singkat)
+🔄 Task sedang dikerjakan  →   ✅ Task selesai
+```
 
-Setelah milestone besar (1 feature selesai, 1 day of work), buat file report baru:
+Contoh:
+```
+✅ Install Laravel Breeze (sudah terinstall + scaffolded — verified Session 7)
+✅ Implement RoleMiddleware (alias 'role' di bootstrap/app.php)
+☐ Create separate login pages (admin/login, instructor/login) — NEXT
+```
+
+### Step 2: Update `06_reports/PROGRESS_TRACKER.md`
+
+1. **Timestamp** — baris 7: `> **Update terakhir:** DD Mei YYYY — HH:MM WIB oleh [NAMA Agent]`
+2. **Summary table** — update persentase modul dan OVERALL
+3. **Phase checklist** — `- [ ]` → `- [x]` untuk setiap item selesai
+4. **Session Log** — tambahkan entry baru di bagian bawah `## 📝 Session Logs`:
+
+```markdown
+### Session N — DD Mei YYYY (Nama / Inisial)
+- Created: [file baru]
+- Updated: [file yang dimodifikasi]
+- Branch: `feature/nama-branch`
+- Status: [ringkasan singkat — apa yang selesai]
+- Next: [task berikutnya yang harus dikerjakan]
+- Report: `06_reports/REPORT_YYYY-MM-DD_TOPIK.md`
+```
+
+### Step 3: Buat Daily Report
+
+Wajib dibuat jika menyelesaikan **1 feature atau lebih** dalam satu sesi.
 
 **Format nama file:**
 ```
@@ -386,12 +412,38 @@ REPORT_YYYY-MM-DD_TOPIC.md
 Contoh:
 ```
 REPORT_2026-05-14_SEEDERS_FACTORIES.md
-REPORT_2026-05-16_AUTH_SYSTEM.md
+REPORT_2026-05-17_AUTH_SYSTEM.md
 ```
 
-TOPIC dalam `SCREAMING_SNAKE_CASE`. Lokasi: `06_reports/`.
+TOPIC dalam `SCREAMING_SNAKE_CASE`. Lokasi: `BelajarKUY_docs/06_reports/`.
 
-**Template minimal:** lihat 2 file report yang sudah ada di `06_reports/` sebagai referensi.
+**Template minimal:** lihat file report yang sudah ada di `06_reports/` sebagai referensi format.
+
+### Step 4: Commit dengan Conventional Commits
+
+Format commit:
+```
+feat(scope): deskripsi singkat implementasi
+
+docs: update progress tracker and task distribution [session N]
+```
+
+Contoh nyata:
+```
+feat(auth): implement role middleware, dashboard controllers, register role UI
+docs: update TASK_DISTRIBUTION + PROGRESS_TRACKER session 7 albariqi
+```
+
+### Step 5: Push ke Feature Branch
+
+```
+git checkout -b feature/nama-branch
+git add .
+git commit -m "feat(scope): ..."
+git push origin feature/nama-branch
+```
+
+Buat PR ke `develop` — **jangan langsung push ke `main`** (lihat `GIT_WORKFLOW.md`).
 
 ---
 

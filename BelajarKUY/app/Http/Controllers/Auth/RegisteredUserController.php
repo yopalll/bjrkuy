@@ -54,10 +54,6 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Redirect ke dashboard sesuai role (F01 Redirect Logic)
-        return match ($user->role) {
-            'instructor' => redirect()->intended(route('instructor.dashboard', absolute: false)),
-            default      => redirect()->intended(route('student.dashboard', absolute: false)),
-        };
+        return redirect()->route('dashboard');
     }
 }

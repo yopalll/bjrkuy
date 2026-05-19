@@ -6,66 +6,49 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Course;
 use App\Models\InfoBox;
-use App\Models\Partner;
 use App\Models\Slider;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
+    /**
+     * Display the landing / home page.
+     * Provides all variables required by frontend/home.blade.php.
+     */
     public function index(Request $request)
     {
-        // 1. Fetch sliders, info boxes, partners
-        $sliders = Slider::where('status', true)->orderBy('sort_order')->get();
-        $infoBoxes = InfoBox::orderBy('sort_order')->get();
-        $partners = Partner::where('status', true)->orderBy('sort_order')->get();
-
-        // 2. Fetch active categories with their active course count
-        $categories = Category::active()
-            ->withCount(['courses' => function ($q) {
-                $q->where('status', 'active');
-            }])
+        $sliders   = Slider::where('status', true)->orderBy('sort_order')->get();
+        $infoBoxes = InfoBox::orderBy('id')->get();
+        $categories = Category::where('status', true)
+            ->withCount(['courses' => fn($q) => $q->where('status', 'active')])
+            ->orderByDesc('courses_count')
+            ->take(8)
             ->get();
 
-        // 3. Handle filters (search & category)
-        $isSearchingOrFiltering = false;
-        $coursesQuery = Course::active()->with(['category', 'instructor', 'reviews']);
+        $isSearchingOrFiltering = $request->filled('search') || $request->filled('category');
 
-        if ($request->filled('search')) {
-            $isSearchingOrFiltering = true;
-            $search = $request->search;
-            $coursesQuery->where(function ($q) use ($search) {
-                $q->where('title', 'like', '%' . $search . '%')
-                  ->orWhere('description', 'like', '%' . $search . '%');
-            });
-        }
-
-        if ($request->filled('category')) {
-            $isSearchingOrFiltering = true;
-            $categorySlug = $request->category;
-            $coursesQuery->whereHas('category', function ($q) use ($categorySlug) {
-                $q->where('slug', $categorySlug);
-            });
-        }
-
-        // 4. Fetch the courses based on filters
         if ($isSearchingOrFiltering) {
-            $filteredCourses = $coursesQuery->latest()->get();
-            $featuredCourses = collect();
+            $filteredCourses = Course::where('status', 'active')
+                ->with(['instructor', 'category', 'reviews'])
+                ->when($request->search, fn($q) => $q->where('title', 'like', "%{$request->search}%"))
+                ->when($request->category, fn($q) => $q->whereHas('category', fn($c) => $c->where('slug', $request->category)))
+                ->latest()
+                ->get();
+            $featuredCourses   = collect();
             $bestsellerCourses = collect();
         } else {
-            $filteredCourses = collect();
-            // Fetch Featured and Bestsellers separately for standard homepage view
-            $featuredCourses = Course::active()
-                ->featured()
-                ->with(['category', 'instructor', 'reviews'])
+            $filteredCourses   = collect();
+            $featuredCourses   = Course::where('status', 'active')
+                ->where('featured', true)
+                ->with(['instructor', 'category', 'reviews'])
                 ->latest()
                 ->take(8)
                 ->get();
-
-            $bestsellerCourses = Course::active()
-                ->bestseller()
-                ->with(['category', 'instructor', 'reviews'])
-                ->latest()
+            $bestsellerCourses = Course::where('status', 'active')
+                ->where('bestseller', true)
+                ->withCount('enrollments')
+                ->with(['instructor', 'category', 'reviews'])
+                ->orderByDesc('enrollments_count')
                 ->take(8)
                 ->get();
         }
@@ -73,7 +56,6 @@ class HomeController extends Controller
         return view('frontend.home', compact(
             'sliders',
             'infoBoxes',
-            'partners',
             'categories',
             'featuredCourses',
             'bestsellerCourses',

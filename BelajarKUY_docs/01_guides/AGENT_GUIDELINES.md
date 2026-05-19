@@ -1,8 +1,20 @@
 # 🤖 BelajarKUY — AI Agent System Guidelines
 
-> **Version:** 1.0 | **Updated:** 12 Mei 2026
+> **Version:** 2.0 | **Updated:** 14 Mei 2026
 > **Purpose:** File ini adalah SYSTEM PROMPT wajib untuk SEMUA AI agent (LLM) yang mengerjakan project BelajarKUY. Baca SELURUH file ini sebelum memulai tugas apapun.
-> **Applies To:** Claude, GPT, Gemini, Copilot, Cursor, Windsurf, dan LLM lainnya.
+> **Applies To:** Claude, GPT, Gemini, Copilot, Cursor, Windsurf, Kiro, dan LLM lainnya.
+
+---
+
+## 🔔 BEFORE YOU START — Mandatory Reading
+
+**Urutan baca:**
+
+1. **File ini** (`AGENT_GUIDELINES.md`) — System prompt utama
+2. **`GLOSSARY.md`** — Terminologi yang sering ambigu (user/student, paid/purchased/enrolled, dll). WAJIB baca — prevents confusion 90% kasus.
+3. **`DATABASE_SCHEMA.md`** — Schema v2 canonical. Jika ada kontradiksi dengan file lain, schema ini yang benar.
+4. **`ADR/`** folder — Architecture Decision Records. Baca untuk reasoning di balik keputusan design.
+5. File spesifik feature di `03_features/` untuk task yang dikerjakan.
 
 ---
 
@@ -15,7 +27,7 @@
 - **Admin** → Mengelola seluruh platform (user, kursus, kategori, order, setting)
 
 ### Referensi Fitur
-Project ini terinspirasi dari [Shuvouits/YouTubeLMS](https://github.com/Shuvouits/YouTubeLMS) (Laravel 11 LMS). Kita membangun versi yang **LEBIH BAIK** menggunakan **Laravel 12** dengan payment gateway **Midtrans** (bukan Stripe).
+Project ini terinspirasi dari [Shuvouits/YouTubeLMS](https://github.com/Shuvouits/YouTubeLMS) (Laravel 11 LMS). Kita membangun versi yang **LEBIH BAIK** menggunakan **Laravel 12** dengan payment gateway **Midtrans** (bukan Stripe). Lihat `ADR-001` untuk reasoning.
 
 ---
 
@@ -25,75 +37,52 @@ Project ini terinspirasi dari [Shuvouits/YouTubeLMS](https://github.com/Shuvouit
 
 | Layer | Teknologi | Versi |
 |-------|-----------|-------|
-| **Backend** | Laravel | 12.x |
+| **Backend** | Laravel | 12.x (boot Laravel 13 compatible) |
 | **PHP** | PHP | ^8.3 |
-| **Database** | MySQL | 8.x |
+| **Database** | MySQL (prod) / SQLite (dev) | 8.x / 3.x |
 | **Frontend** | Blade + TailwindCSS | v4 |
 | **JS Interactivity** | Alpine.js | ^3.x |
 | **Build Tool** | Vite | Latest |
-| **Payment** | Midtrans Snap API | v2 |
-| **Auth** | Laravel Breeze | Latest |
+| **Payment** | Midtrans Snap API | v2 (sandbox only — ADR-004) |
+| **Auth** | Laravel Breeze (Blade) | Latest |
 | **Social Login** | Laravel Socialite (Google) | Latest |
-| **Media Storage** | Cloudinary + YouTube (video backup) | Latest |
-| **Search** | Meilisearch + Laravel Scout | Latest |
+| **Media Storage** | Cloudinary | Latest |
+| **Video Hosting** | YouTube (Unlisted) | — |
+| **Search Engine** | Meilisearch + Laravel Scout | Latest |
 | **Real-time** | Laravel Reverb (WebSocket) | Latest |
-| **Email** | Resend (prod) / Mailtrap (dev) | Latest |
+| **Email (prod)** | Resend | Latest |
+| **Email (dev)** | Mailtrap / log driver | — |
 | **Admin Panel** | Custom Blade (bukan Filament) | — |
-| **Testing** | PHPUnit / Pest | Latest |
 
 ### 2.2 Database Schema (Canonical)
 
-> ⚠️ **JANGAN** memodifikasi schema tanpa persetujuan PM. Detail lengkap di `02_architecture/DATABASE_SCHEMA.md`.
+> ⚠️ **SINGLE SOURCE OF TRUTH:** `02_architecture/DATABASE_SCHEMA.md` (v2).
+> 19 tabel. JANGAN modifikasi schema tanpa persetujuan PM.
 
+Tabel-tabel yang ada:
 ```
-users                → id, name, email, password, role, photo, phone, address, bio, website, ...
-categories           → id, name, slug, image, status
-sub_categories       → id, category_id (FK), name, slug
-courses              → id, category_id (FK), subcategory_id (FK), instructor_id (FK→users),
-                       title, slug, description, price, discount, thumbnail, video_url,
-                       duration, bestseller, featured, status
-course_goals         → id, course_id (FK), goal
-course_sections      → id, course_id (FK), title, sort_order
-course_lectures      → id, section_id (FK), title, url, content, duration, sort_order
-wishlists            → id, user_id (FK), course_id (FK) — UNIQUE(user_id, course_id)
-carts                → id, user_id (FK), course_id (FK) — UNIQUE(user_id, course_id)
-coupons              → id, instructor_id (FK), course_id (FK nullable), code, discount_percent,
-                       valid_until, max_usage, used_count, status
-payments             → id, user_id (FK), midtrans_order_id, midtrans_transaction_id,
-                       payment_type, total_amount, status, midtrans_response
-orders               → id, payment_id (FK), user_id (FK), course_id (FK),
-                       instructor_id (FK denorm), coupon_id (FK nullable),
-                       original_price, discount_amount, final_price, status
-enrollments          → id, user_id (FK), course_id (FK), order_id (FK), enrolled_at
-                       — UNIQUE(user_id, course_id)
-lecture_completions  → id, user_id (FK), lecture_id (FK), completed_at
-                       — UNIQUE(user_id, lecture_id)
-reviews              → id, user_id (FK), course_id (FK), rating, comment, status
-                       — UNIQUE(user_id, course_id)
-sliders              → id, title, description, image, button_text, button_url, status, sort_order
-info_boxes           → id, title, description, icon, sort_order
-partners             → id, name, image, status, sort_order
-site_infos           → id, key, value
+users (extended), categories, sub_categories, courses, course_goals,
+course_sections, course_lectures, wishlists, carts, coupons,
+payments, orders, enrollments, lecture_completions, reviews,
+sliders, info_boxes, partners, site_infos
 ```
 
-### 2.3 Eloquent Models (Yang Harus Dibuat)
+### 2.3 Eloquent Models
 
-Lokasi: `app/Models/`
-
-```
-User, Category, SubCategory, Course, CourseGoal, CourseSection,
-CourseLecture, Wishlist, Cart, Coupon, Payment, Order,
-Enrollment, LectureCompletion, Review,
-Slider, InfoBox, Partner, SiteInfo
-```
+Lokasi: `app/Models/` — **19 model** sudah tersedia dengan relationships, scopes, casts, dan accessors lengkap.
 
 ### 2.4 Role System
 
-| Role | Nilai di DB | Akses |
-|------|-------------|-------|
-| `user` | `user` | Browse, beli kursus, wishlist, review |
-| `instructor` | `instructor` | + Buat/edit kursus, section, lecture, kupon |
-| `admin` | `admin` | + Kelola semua: user, kursus, kategori, order, settings |
+Lihat `01_guides/GLOSSARY.md` untuk klarifikasi naming:
+
+| Role | DB enum | Akses |
+|------|---------|-------|
+| Student | `user` | Browse, beli kursus, enroll, wishlist, review |
+| Instructor | `instructor` | + Buat/edit kursus, section, lecture, kupon |
+| Admin | `admin` | + Kelola seluruh platform |
+
+⚠️ Dalam UI selalu pakai **"Siswa"** (Indonesian) / **"Student"** (English).
+Dalam code business logic pakai `student`. Dalam DB value pakai `user`. Lihat `ADR-007`.
 
 ---
 
@@ -103,9 +92,10 @@ Kerjakan sesuai urutan prioritas. **JANGAN** loncat ke prioritas lebih rendah se
 
 | Priority | Modul | Status | PIC |
 |----------|-------|--------|-----|
-| **P0** | Project Setup (Laravel 12 + DB) | NOT STARTED | Yosua |
-| **P1** | Database Migrations & Models | NOT STARTED | Yosua |
-| **P2** | Auth System (Breeze + Role + Google) | NOT STARTED | Albariqi |
+| **P0** | Project Setup (Laravel 12 + DB) | ✅ DONE | Yosua |
+| **P1** | Database Migrations & Models | ✅ DONE | Yosua |
+| **P1b** | Seeders & Factories | ✅ DONE | Yosua |
+| **P2** | Auth System (Breeze + Role + Google) | 🔜 NEXT | Albariqi |
 | **P3** | Landing Page & Frontend Base | NOT STARTED | Vascha & Quinsha |
 | **P4** | Category & SubCategory CRUD | NOT STARTED | Quinsha & Vascha |
 | **P5** | Course CRUD (Instructor) | NOT STARTED | Albariqi |
@@ -113,11 +103,12 @@ Kerjakan sesuai urutan prioritas. **JANGAN** loncat ke prioritas lebih rendah se
 | **P7** | Cart & Wishlist | NOT STARTED | Ray |
 | **P8** | Payment (Midtrans) & Order | NOT STARTED | Ray |
 | **P9** | Student Dashboard & Enrolled | NOT STARTED | Vascha & Quinsha |
-| **P10** | Review & Rating System | NOT STARTED | Quinsha & Vascha |
-| **P11** | Admin Panel (Full) | NOT STARTED | Quinsha & Vascha |
-| **P12** | Coupon System | NOT STARTED | Ray |
-| **P13** | Site Settings & SMTP | NOT STARTED | Quinsha & Vascha |
-| **P14** | Polish, Testing, Deploy | NOT STARTED | ALL |
+| **P10** | Course Player (Watch Page) | NOT STARTED | Albariqi + Vascha |
+| **P11** | Review & Rating System | NOT STARTED | Quinsha & Vascha |
+| **P12** | Admin Panel (Full) | NOT STARTED | Quinsha & Vascha |
+| **P13** | Coupon System | NOT STARTED | Ray |
+| **P14** | Site Settings | NOT STARTED | Quinsha & Vascha |
+| **P15** | Polish, Testing, Deploy | NOT STARTED | ALL |
 
 ---
 
@@ -126,40 +117,28 @@ Kerjakan sesuai urutan prioritas. **JANGAN** loncat ke prioritas lebih rendah se
 ### 4.1 Aturan Bahasa
 
 - **Nama fungsi/method:** English only (e.g., `getCoursesByCategory()`)
-- **Nama variabel:** English only (e.g., `$courseCount`)
-- **Database column:** English (mengikuti schema di atas)
+- **Nama variabel:** English only (e.g., `$courseCount`, `$student`)
+- **Database column:** English snake_case (mengikuti schema)
 - **Comment & docblock:** English
-- **Text UI (label, heading, tombol):** **Bahasa Indonesia** (UX lokal)
-- **Nama route:** English dengan kebab-case (e.g., `course-details`)
+- **Text UI (label, heading, tombol):** **Bahasa Indonesia** (UX lokal — pakai "Siswa", "Instruktur", "Keranjang", dll)
+- **Route URL:** English, kebab-case/snake-case
+- **Route name:** English, dot notation
 
 ### 4.2 Konvensi Laravel 12
 
+✅ **BENAR — Eloquent relationships + eager loading:**
 ```php
-// ✅ BENAR — Gunakan Eloquent relationships + eager loading
 $courses = Course::with(['category', 'instructor', 'sections.lectures'])
-    ->where('status', 'active')
+    ->active()
     ->paginate(12);
+```
 
-// ❌ SALAH — Raw query + N+1
+❌ **SALAH — Raw query + N+1:**
+```php
 $courses = DB::table('courses')->get();
 foreach ($courses as $course) {
     $course->category = DB::table('categories')->find($course->category_id);
 }
-```
-
-```php
-// ✅ BENAR — Form Request validation
-class StoreCourseRequest extends FormRequest {
-    public function rules(): array {
-        return [
-            'title' => 'required|string|max:255',
-            'price' => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-        ];
-    }
-}
-
-// ❌ SALAH — Inline validation di controller (untuk yang kompleks)
 ```
 
 ### 4.3 Konvensi Controller
@@ -169,67 +148,61 @@ app/Http/Controllers/
 ├── Frontend/
 │   ├── HomeController.php
 │   ├── CourseDetailController.php
+│   ├── CourseCatalogController.php
 │   ├── CartController.php
 │   ├── CheckoutController.php
-│   └── WishlistController.php
+│   ├── WishlistController.php
+│   ├── CouponController.php          ← apply coupon endpoint
+│   └── SearchController.php
 ├── Backend/
-│   ├── Admin/
-│   │   ├── DashboardController.php
-│   │   ├── CategoryController.php
-│   │   ├── CourseController.php
-│   │   ├── OrderController.php
-│   │   ├── UserController.php
-│   │   └── SettingController.php
-│   ├── Instructor/
-│   │   ├── DashboardController.php
-│   │   ├── CourseController.php
-│   │   ├── SectionController.php
-│   │   ├── LectureController.php
-│   │   └── CouponController.php
-│   └── Student/
-│       ├── DashboardController.php
-│       ├── ProfileController.php
-│       └── WishlistController.php
-├── Auth/
-│   └── (Laravel Breeze auto-generated)
-└── SocialController.php
+│   ├── Admin/                         ← Admin panel controllers
+│   ├── Instructor/                    ← Instructor panel controllers
+│   └── Student/                       ← Student panel controllers (UI term)
+├── Auth/                              ← Breeze auto-generated
+└── SocialController.php               ← Google OAuth
 ```
+
+⚠️ Folder name pakai **"Student"** meski DB value `user`. Lihat `ADR-007`.
 
 ### 4.4 Konvensi View / Blade
 
 ```
 resources/views/
-├── layouts/
-│   ├── app.blade.php            ← Main layout
-│   ├── admin.blade.php          ← Admin layout
-│   └── instructor.blade.php     ← Instructor layout
-├── components/
-│   ├── navbar.blade.php
-│   ├── footer.blade.php
-│   ├── course-card.blade.php
-│   ├── category-card.blade.php
-│   └── sidebar.blade.php
-├── frontend/
-│   ├── home.blade.php
-│   ├── course-detail.blade.php
-│   ├── cart.blade.php
-│   └── checkout.blade.php
+├── layouts/          ← app, admin, instructor, student
+├── components/       ← Reusable Blade components
+├── frontend/         ← Public-facing pages
 ├── backend/
 │   ├── admin/
 │   ├── instructor/
-│   └── student/
-└── auth/
+│   └── student/      ← UI term, sesuai controller folder
+└── auth/             ← Breeze
 ```
 
 ### 4.5 Security Rules
 
-1. **JANGAN** expose internal ID di URL → gunakan slug
+1. **JANGAN** expose internal ID di URL publik — gunakan slug
 2. **SELALU** apply middleware `auth` untuk route yang butuh login
 3. **SELALU** validasi input — gunakan Form Requests
 4. **JANGAN** hardcode credentials — selalu baca dari `.env`
-5. **SELALU** gunakan CSRF token di form
-6. **JANGAN** trust user input — sanitize & validate everything
-7. **Midtrans keys** harus di `.env`, JANGAN di kode
+5. **SELALU** gunakan CSRF token di form (pengecualian: `/payment/callback` webhook Midtrans)
+6. **JANGAN** trust user input — sanitize & validate
+7. **Midtrans keys** di `.env`, **bukan** di kode atau DB
+8. Lihat `01_guides/SECURITY_GUIDELINES.md` untuk detail lengkap
+
+### 4.6 Media Upload Rule (PENTING)
+
+**SEMUA** upload media (gambar, thumbnail, foto profil) masuk ke **Cloudinary**:
+
+```php
+// ✅ BENAR
+$result = $request->file('thumbnail')->storeOnCloudinary('belajarkuy/courses');
+$url = $result->getSecurePath();
+
+// ❌ SALAH — Jangan upload ke public/uploads/
+$path = $request->file('thumbnail')->store('uploads/courses', 'public');
+```
+
+**Pengecualian:** `public/images/` hanya untuk static assets (logo brand, icon default, dll) yang di-bundle bersama repo.
 
 ---
 
@@ -238,64 +211,107 @@ resources/views/
 ### 5.1 Purchase Flow
 
 ```
-[Browse] → [Add to Cart] → [Checkout] → [Midtrans Payment] → [Callback] → [Order Created] → [Access Course]
+[Browse Catalog]
+      ↓
+[Add to Cart]   → (check: not already enrolled)
+      ↓
+[Checkout]
+      ↓
+[Midtrans Snap Payment]
+      ↓
+[Midtrans Webhook Callback]
+      ↓
+[Transaction: Create Order + Enrollment + Increment Coupon Usage + Clear Cart]
+      ↓
+[Student Access Course via Enrollment]
 ```
 
-### 5.2 Midtrans Payment Flow
+### 5.2 Midtrans Payment Flow (Sandbox Only — ADR-004)
 
 ```php
-// 1. User klik "Bayar" → Controller buat Snap Token
-// PENTING: is_production SELALU false (sandbox) — project non-komersial
+// config/midtrans.php - is_production HARDCODED false
 \Midtrans\Config::$serverKey    = config('midtrans.server_key');
-\Midtrans\Config::$isProduction = false; // HARDCODED, bukan dari env
+\Midtrans\Config::$isProduction = false;  // ADR-004 — JANGAN ubah
 \Midtrans\Config::$isSanitized  = true;
 \Midtrans\Config::$is3ds        = true;
 
 $params = [
     'transaction_details' => [
         'order_id'     => 'BKUY-' . time() . '-' . auth()->id(),
-        'gross_amount' => (int) $totalAmount, // HARUS integer (Rupiah)
+        'gross_amount' => (int) $totalAmount, // INTEGER, bukan float
     ],
     'customer_details' => [
         'first_name' => auth()->user()->name,
         'email'      => auth()->user()->email,
     ],
-    'item_details' => $items, // dari cart, price harus integer
+    'item_details' => $items,
 ];
 $snapToken = \Midtrans\Snap::getSnapToken($params);
-
-// 2. Frontend: load snap.js dari URL SANDBOX (selalu)
-//    <script src="https://app.sandbox.midtrans.com/snap/snap.js" ...>
-//    snap.pay($snapToken, { onSuccess, onPending, onError, onClose })
-// 3. Midtrans kirim callback ke /payment/callback
-// 4. Di callback: cek fraud_status (CC) + transaction_status → Update payment + Create orders
 ```
 
-### 5.3 Enrollment Check
+Frontend Snap JS **selalu sandbox URL:**
+```html
+<script src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
+```
+
+Lihat `03_features/F06_PAYMENT_MIDTRANS.md` untuk detail lengkap.
+
+### 5.3 Enrollment Check (PENTING — Schema v2)
+
+**Gunakan tabel `enrollments`**, bukan query Order lama:
 
 ```php
-// Cek apakah student sudah beli kursus ini
+// ✅ BENAR — fast, single table lookup
+$isEnrolled = Enrollment::where('user_id', auth()->id())
+    ->where('course_id', $courseId)
+    ->exists();
+
+// ❌ SALAH — Schema v1 pattern, lebih lambat
 $isEnrolled = Order::where('user_id', auth()->id())
     ->where('course_id', $courseId)
     ->where('status', 'completed')
     ->exists();
 ```
 
-### 5.4 Instructor Revenue Calculation
+`enrollments` table sengaja dibuat untuk menghindari join. Gunakan.
 
-```php
-// Instructor dapat 70% dari harga kursus (setelah diskon)
-$instructorShare = $order->price * 0.70;
-$platformShare = $order->price * 0.30;
-```
+### 5.4 Revenue — Gross Only (ADR-005)
+
+**Payout / revenue split OUT OF SCOPE** untuk MVP akademik (ADR-005).
+
+Yang ada:
+- Instructor melihat **gross revenue** mereka (sum of `orders.final_price` with status `completed`)
+- Admin melihat **platform gross revenue** (sum of `payments.total_amount` with status `settlement`/`capture`)
+
+Yang **TIDAK** ada:
+- Tabel `payouts`
+- Perhitungan platform fee / instructor share
+- UI approve payout
+- Transfer bank
+
+Jangan tulis code yang asumsikan 70/30 split.
 
 ### 5.5 Course Status Flow
 
 ```
-draft → pending_review → active → inactive
-                      ↗
-         admin approve
+draft ────────→ pending_review ──admin approve──→ active
+                       ↓                              ↓
+                   admin reject                   admin toggle
+                       ↓                              ↓
+                   inactive                       inactive
 ```
+
+- **draft** — instructor baru mulai, belum submit
+- **pending_review** — instructor submit, menunggu admin
+- **active** — public, muncul di catalog
+- **inactive** — ditolak atau di-unpublish
+
+### 5.6 Instructor Lifecycle (ADR-006)
+
+Instructor **langsung aktif** saat register. **Tidak ada** approval flow untuk instructor.
+
+Admin moderasi di level **course** (approve/reject course), bukan level user.
 
 ---
 
@@ -305,15 +321,19 @@ draft → pending_review → active → inactive
 
 1. **JANGAN** modifikasi migrations yang sudah dibuat tanpa izin PM
 2. **JANGAN** install Composer/NPM package baru tanpa izin PM
-3. **JANGAN** hapus atau rename file yang sudah ada tanpa izin
-4. **JANGAN** mengubah database column names dari schema yang sudah ditetapkan
-5. **JANGAN** membuat model yang sudah ada — modifikasi saja jika perlu
+3. **JANGAN** hapus atau rename file existing tanpa izin
+4. **JANGAN** mengubah database column names dari Schema v2
+5. **JANGAN** membuat model yang sudah ada — modifikasi saja
 6. **SELALU** jalankan `php artisan migrate:status` sebelum propose perubahan schema
-7. **JANGAN** hardcode API keys atau credentials
-8. **SELALU** bekerja di branch yang sesuai (lihat `GIT_WORKFLOW.md`)
-9. **SELALU** update `PROGRESS_TRACKER.md` setelah menyelesaikan task
-10. **JANGAN** menggunakan Stripe — kita menggunakan **Midtrans Snap ONLY**
-11. **JANGAN** set `Config::$isProduction = true` — project ini **SELALU sandbox**
+7. **JANGAN** hardcode API keys atau credentials — pakai `.env`
+8. **SELALU** bekerja di branch feature yang sesuai (lihat `GIT_WORKFLOW.md`)
+9. **SELALU** update `PROGRESS_TRACKER.md` + bikin daily report setelah selesai task
+10. **JANGAN** menggunakan Stripe — kita menggunakan **Midtrans Snap ONLY** (ADR-001)
+11. **JANGAN** set `Config::$isProduction = true` — SELALU sandbox (ADR-004)
+12. **JANGAN** upload ke `public/uploads/` — pakai Cloudinary (lihat section 4.6)
+13. **JANGAN** cek enrollment via `orders` — pakai `enrollments` table (section 5.3)
+14. **JANGAN** asumsikan payout/revenue split ada — OUT OF SCOPE (ADR-005)
+15. **JANGAN** pakai field deprecated (`coupons.name`, `coupons.validity`, dll) — lihat `GLOSSARY.md` section "DEPRECATED Terms"
 
 ---
 
@@ -326,7 +346,7 @@ TASK: [Nama task yang dikerjakan]
 ACTION: [Apa yang dilakukan — file yang dibuat/dimodifikasi]
 RESULT: [Hasil — berhasil/gagal + detail]
 BLOCKERS: [Hal yang menghambat, jika ada]
-NEXT: [Task selanjutnya yang perlu dikerjakan]
+NEXT: [Task selanjutnya]
 ```
 
 ### Contoh:
@@ -343,65 +363,162 @@ NEXT: [P8] Integrasi Midtrans Snap untuk checkout.
 
 ---
 
-## 8. PETA FILE PROYEK
+## 8. CARA UPDATE PROGRESS & LAPORAN
+
+> ⛔ **MANDATORY** — Semua AI agent WAJIB menjalankan semua langkah di bawah ini setelah selesai mengerjakan task, SEBELUM melakukan `git push`. Tidak ada pengecualian.
+
+### Step 1: Update `04_plans/TASK_DISTRIBUTION.md`
+
+Ganti status setiap task yang diselesaikan:
+
+```
+☐ Task belum dikerjakan   →   ✅ Task selesai (tambah keterangan singkat)
+🔄 Task sedang dikerjakan  →   ✅ Task selesai
+```
+
+Contoh:
+```
+✅ Install Laravel Breeze (sudah terinstall + scaffolded — verified Session 7)
+✅ Implement RoleMiddleware (alias 'role' di bootstrap/app.php)
+☐ Create separate login pages (admin/login, instructor/login) — NEXT
+```
+
+### Step 2: Update `06_reports/PROGRESS_TRACKER.md`
+
+1. **Timestamp** — baris 7: `> **Update terakhir:** DD Mei YYYY — HH:MM WIB oleh [NAMA Agent]`
+2. **Summary table** — update persentase modul dan OVERALL
+3. **Phase checklist** — `- [ ]` → `- [x]` untuk setiap item selesai
+4. **Session Log** — tambahkan entry baru di bagian bawah `## 📝 Session Logs`:
+
+```markdown
+### Session N — DD Mei YYYY (Nama / Inisial)
+- Created: [file baru]
+- Updated: [file yang dimodifikasi]
+- Branch: `feature/nama-branch`
+- Status: [ringkasan singkat — apa yang selesai]
+- Next: [task berikutnya yang harus dikerjakan]
+- Report: `06_reports/REPORT_YYYY-MM-DD_TOPIK.md`
+```
+
+### Step 3: Buat Daily Report
+
+Wajib dibuat jika menyelesaikan **1 feature atau lebih** dalam satu sesi.
+
+**Format nama file:**
+```
+REPORT_YYYY-MM-DD_TOPIC.md
+```
+
+Contoh:
+```
+REPORT_2026-05-14_SEEDERS_FACTORIES.md
+REPORT_2026-05-17_AUTH_SYSTEM.md
+```
+
+TOPIC dalam `SCREAMING_SNAKE_CASE`. Lokasi: `BelajarKUY_docs/06_reports/`.
+
+**Template minimal:** lihat file report yang sudah ada di `06_reports/` sebagai referensi format.
+
+### Step 4: Commit dengan Conventional Commits
+
+Format commit:
+```
+feat(scope): deskripsi singkat implementasi
+
+docs: update progress tracker and task distribution [session N]
+```
+
+Contoh nyata:
+```
+feat(auth): implement role middleware, dashboard controllers, register role UI
+docs: update TASK_DISTRIBUTION + PROGRESS_TRACKER session 7 albariqi
+```
+
+### Step 5: Push ke Feature Branch
+
+```
+git checkout -b feature/nama-branch
+git add .
+git commit -m "feat(scope): ..."
+git push origin feature/nama-branch
+```
+
+Buat PR ke `develop` — **jangan langsung push ke `main`** (lihat `GIT_WORKFLOW.md`).
+
+---
+
+## 9. PETA FILE PROYEK (Actual)
 
 ```
 BelajarKUY/
 ├── app/
 │   ├── Http/
 │   │   ├── Controllers/
-│   │   │   ├── Frontend/          # HomeController, CartController, CheckoutController, WishlistController
+│   │   │   ├── Frontend/    
 │   │   │   ├── Backend/
-│   │   │   │   ├── Admin/         # DashboardController, CategoryController, CourseController, ...
-│   │   │   │   ├── Instructor/    # DashboardController, CourseController, SectionController, ...
-│   │   │   │   └── Student/       # DashboardController, ProfileController, ...
-│   │   │   ├── Auth/              # Breeze auto-generated
-│   │   │   └── SocialController.php
+│   │   │   │   ├── Admin/
+│   │   │   │   ├── Instructor/
+│   │   │   │   └── Student/          ← UI term (ADR-007)
+│   │   │   └── Auth/                 ← Breeze auto-generated
 │   │   ├── Middleware/
 │   │   │   └── RoleMiddleware.php
-│   │   └── Requests/              # Form Request classes
-│   └── Models/                    # 18 Eloquent models
+│   │   └── Requests/                 ← Form Request classes
+│   ├── Models/                       ← 19 Eloquent models (ADA)
+│   ├── Services/
+│   │   ├── MidtransService.php       
+│   │   └── CloudinaryService.php    
+│   ├── Events/                       ← Reverb broadcast events
+│   └── Mail/                         ← Mail classes
 │
 ├── database/
-│   ├── migrations/                # ~20 migration files
-│   ├── seeders/                   # DatabaseSeeder, CategorySeeder, etc.
-│   └── factories/                 # Model factories
+│   ├── migrations/                   ← 22 migration files (ADA, v2)
+│   ├── factories/                    ← 19 factories (ADA)
+│   └── seeders/                      ← 5 seeders (ADA)
 │
 ├── resources/views/
-│   ├── layouts/                   # app, admin, instructor layouts
-│   ├── components/                # Reusable Blade components
-│   ├── frontend/                  # Public-facing pages
-│   ├── backend/                   # Admin, Instructor, Student panels
-│   └── auth/                      # Login, Register, etc.
+│   ├── layouts/
+│   ├── components/
+│   ├── frontend/
+│   ├── backend/
+│   │   ├── admin/
+│   │   ├── instructor/
+│   │   └── student/
+│   └── auth/
 │
 ├── routes/
-│   ├── web.php                    # All web routes
-│   └── auth.php                   # Breeze auth routes
+│   ├── web.php
+│   └── auth.php
 │
 ├── config/
-│   └── midtrans.php               # Midtrans configuration
+│   └── midtrans.php
 │
 ├── public/
-│   └── uploads/                   # User uploads (photos, thumbnails)
+│   └── build/                        ← Vite compiled assets
+│   # ⚠️ TIDAK ADA public/uploads/ — media ke Cloudinary (section 4.6)
 │
-├── BelajarKUY_docs/               # ← Folder dokumentasi ini
+├── BelajarKUY_docs/                  ← Dokumentasi
 │
-├── .env                           # Environment variables
+├── .env / .env.example
 ├── composer.json
 └── package.json
 ```
 
 ---
 
-## 9. CARA UPDATE PROGRESS
+## 10. GLOSSARY REFERENCE (Singkat)
 
-Setelah menyelesaikan task apapun, update `06_reports/PROGRESS_TRACKER.md`:
+Lihat `01_guides/GLOSSARY.md` untuk lengkap. Yang paling sering ambigu:
 
-1. Pindahkan item dari `🔴 BELUM DIKERJAKAN` ke `🟢 SELESAI`
-2. Update persentase di tabel summary
-3. Tambahkan entry dengan timestamp: `> **Update:** DD Mei 2026 — HH:MM WIB oleh [NAMA]`
-4. Dokumentasikan known issues yang ditemukan
+| Term | Meaning | Source of Truth |
+|------|---------|-----------------|
+| Paid | Midtrans confirmed | `payments.status IN (settlement, capture)` |
+| Purchased | Order completed | `orders.status = completed` |
+| Enrolled | Access granted | `enrollments` row exists |
+
+**Rule:** Untuk "boleh akses course?" → cek `enrollments`. ALWAYS.
 
 ---
 
-*End of AGENT_GUIDELINES.md — Ini adalah single source of truth untuk semua AI agent di project BelajarKUY.*
+*End of AGENT_GUIDELINES.md v2 — Single source of truth untuk semua AI agent di project BelajarKUY.*
+
+*Lihat `GLOSSARY.md`, `DATABASE_SCHEMA.md`, dan `ADR/` untuk detail lebih lanjut.*

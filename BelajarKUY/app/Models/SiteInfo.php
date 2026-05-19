@@ -13,4 +13,14 @@ class SiteInfo extends Model
         'key',
         'value',
     ];
+
+    /**
+     * Quick helper: SiteInfo::get('logo', '/default.png').
+     */
+    public static function get(string $key, ?string $default = null): ?string
+    {
+        $info = static::query()->where('key', $key)->first();
+
+        return $info?->value ?? $default;
+    }
 }

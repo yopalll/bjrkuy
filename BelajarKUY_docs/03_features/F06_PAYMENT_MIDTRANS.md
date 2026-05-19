@@ -270,24 +270,53 @@ public function callback(Request $request, MidtransService $midtrans)
 
 private function handleSuccess(Payment $payment): void
 {
-    $payment->update(['status' => 'settlement']);
+    DB::transaction(function () use ($payment) {
+        $payment->update(['status' => 'settlement']);
 
-    // Create order records dari cart items yang tersimpan saat checkout
-    $cartItems = Cart::where('user_id', $payment->user_id)->get();
+        // Create order records dari cart items yang tersimpan saat checkout
+        $cartItems = Cart::where('user_id', $payment->user_id)
+            ->with('course')
+            ->get();
 
-    foreach ($cartItems as $item) {
-        Order::create([
-            'payment_id'    => $payment->id,
-            'user_id'       => $payment->user_id,
-            'course_id'     => $item->course_id,
-            'instructor_id' => $item->instructor_id,
-            'price'         => $item->price,
-            'status'        => 'completed',
-        ]);
+        foreach ($cartItems as $item) {
+            $order = Order::create([
+                'payment_id'      => $payment->id,
+                'user_id'         => $payment->user_id,
+                'course_id'       => $item->course_id,
+                'instructor_id'   => $item->course->instructor_id,  // denormalized (ADR-003)
+                'coupon_id'       => $payment->applied_coupon_id ?? null,
+                'original_price'  => $item->course->price,
+                'discount_amount' => $discountAmount,
+                'final_price'     => $item->course->discounted_price,
+                'status'          => 'completed',
+            ]);
+
+            // Create enrollment — grants access to course
+            Enrollment::create([
+                'user_id'     => $payment->user_id,
+                'course_id'   => $item->course_id,
+                'order_id'    => $order->id,
+                'enrolled_at' => now(),
+            ]);
+        }
+
+        // Increment coupon used_count (jika dipakai)
+        if ($couponId = $payment->applied_coupon_id ?? null) {
+            Coupon::where('id', $couponId)->increment('used_count');
+        }
+
+        // Clear cart HANYA setelah order + enrollment berhasil
+        Cart::where('user_id', $payment->user_id)->delete();
+    });
+
+    // Notifications (setelah transaction commit)
+    Mail::to($payment->user)->queue(new OrderConfirmationMail($payment));
+    foreach ($payment->orders()->with('instructor')->get() as $order) {
+        Mail::to($order->instructor)->queue(new NewSaleMail($order));
     }
 
-    // Clear cart HANYA setelah order berhasil dibuat
-    Cart::where('user_id', $payment->user_id)->delete();
+    // Real-time toast ke buyer
+    event(new PaymentSuccessful($payment));
 }
 ```
 

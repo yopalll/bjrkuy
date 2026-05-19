@@ -52,10 +52,11 @@ Kamu adalah senior Laravel 12 developer. Bangun admin panel lengkap untuk projec
 - Approve/Reject: Toggle status (pending_review → active / inactive)
 - TIDAK ada create/edit — itu tugas instructor
 
-### 6. Instructor Management
-- Index: Table (Photo, Name, Email, Status, Actions)
-- Approve/Block: Toggle active status
-- View: Detail instructor + list kursusnya
+### 6. Instructor Management (View Only — ADR-006)
+- Index: Table (Photo, Name, Email, # Courses, # Coupons, Actions)
+- View: Detail instructor + list kursusnya + statistik
+- ❌ TIDAK ADA Approve/Block button — instructor auto-active sesuai ADR-006
+- ❌ TIDAK ADA payout UI — out of scope sesuai ADR-005
 
 ### 7. Order Management
 - Index: Table (Order ID, Student, Course, Amount, Status, Date, Actions)
@@ -74,11 +75,22 @@ Kamu adalah senior Laravel 12 developer. Bangun admin panel lengkap untuk projec
 - Key-value pairs (logo, site_name, phone, email, address, facebook, instagram, twitter, youtube)
 - Edit form: loop through all settings
 
-### 11. Settings Pages
-- Mail Setting: host, port, username, password, encryption (reference only — values in .env)
-- Midtrans Setting: server_key, client_key (reference only — values in .env, NOT from DB)
-- Google Setting: client_id, client_secret, redirect_url (reference only — values in .env)
-- Cloudinary Setting: cloud_name, api_key, api_secret (reference only — values in .env)
+### 11. Settings
+
+Halaman "Settings" ditempatkan di satu entry menu sidebar: **Site Settings**.
+
+Halaman ini edit konten **yang disimpan di DB**:
+- Logo, site_name, tagline, email, phone, address, footer text
+- Social media URLs (facebook, instagram, twitter, youtube)
+- Disimpan sebagai key-value di tabel `site_infos`
+
+⚠️ **HAPUS** halaman-halaman ini (sebelumnya ada di spec, sekarang di-remove):
+- ❌ Mail Setting UI — credentials di .env, bukan DB
+- ❌ Midtrans Setting UI — credentials di .env, hardcoded sandbox (ADR-004)
+- ❌ Google OAuth Setting UI — credentials di .env
+- ❌ Cloudinary Setting UI — credentials di .env
+
+Project ini tidak memerlukan edit API keys via UI — credentials cukup di `.env` server.
 
 ### 12. Review Management
 - Index: Table (Student, Course, Rating, Comment, Status, Actions)

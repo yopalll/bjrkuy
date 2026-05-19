@@ -15,6 +15,8 @@ class Wishlist extends Model
         'course_id',
     ];
 
+    // ========================= RELATIONSHIPS =========================
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

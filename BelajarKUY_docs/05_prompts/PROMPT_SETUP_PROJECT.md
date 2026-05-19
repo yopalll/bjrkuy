@@ -46,12 +46,14 @@ php artisan install:broadcasting
 ```
 
 ### 5. Setup .env file
-- Pastikan DB_DATABASE=belajarkuy
-- Tambahkan variable Midtrans (MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY, MIDTRANS_IS_PRODUCTION, MIDTRANS_MERCHANT_ID)
+- Pastikan DB_CONNECTION=sqlite (default, zero setup) atau ganti ke mysql dengan DB_DATABASE=belajarkuy
+- Tambahkan variable Midtrans (MIDTRANS_SERVER_KEY, MIDTRANS_CLIENT_KEY, MIDTRANS_MERCHANT_ID)
+  ⚠️ JANGAN tambah MIDTRANS_IS_PRODUCTION — hardcoded false di config (ADR-004)
 - Tambahkan variable Google OAuth (GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL)
 - Tambahkan variable Cloudinary (CLOUDINARY_URL, CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)
 - Tambahkan variable Meilisearch (SCOUT_DRIVER=meilisearch, MEILISEARCH_HOST, MEILISEARCH_KEY)
 - Tambahkan variable Reverb broadcasting (REVERB_APP_ID, REVERB_APP_KEY, REVERB_APP_SECRET, dll)
+- Set APP_LOCALE=id dan APP_TIMEZONE=Asia/Jakarta
 
 ### 6. Buat config/midtrans.php
 ```php
@@ -59,7 +61,7 @@ php artisan install:broadcasting
 return [
     'server_key' => env('MIDTRANS_SERVER_KEY', ''),
     'client_key' => env('MIDTRANS_CLIENT_KEY', ''),
-    'is_production' => env('MIDTRANS_IS_PRODUCTION', false),
+    'is_production' => false,       // HARDCODED — project ini sandbox only (ADR-004)
     'is_sanitized' => true,
     'is_3ds' => true,
     'merchant_id' => env('MIDTRANS_MERCHANT_ID', ''),

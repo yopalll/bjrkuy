@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Laravel\Scout\Searchable;
 
 class Course extends Model
 {
-    use HasFactory, Searchable;
+    use HasFactory;
 
     protected $fillable = [
         'category_id',
@@ -29,18 +29,17 @@ class Course extends Model
         'status',
     ];
 
-    protected $casts = [
-        'price' => 'decimal:2',
-        'discount' => 'integer',
-        'bestseller' => 'boolean',
-        'featured' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'price' => 'decimal:2',
+            'discount' => 'integer',
+            'bestseller' => 'boolean',
+            'featured' => 'boolean',
+        ];
+    }
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
+    // ========================= RELATIONSHIPS =========================
 
     public function category(): BelongsTo
     {
@@ -59,7 +58,7 @@ class Course extends Model
 
     public function sections(): HasMany
     {
-        return $this->hasMany(CourseSection::class)->orderBy('sort_order');
+        return $this->hasMany(CourseSection::class);
     }
 
     public function goals(): HasMany
@@ -92,67 +91,52 @@ class Course extends Model
         return $this->hasMany(Enrollment::class);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SCOPES
-    |--------------------------------------------------------------------------
-    */
+    public function coupons(): HasMany
+    {
+        return $this->hasMany(Coupon::class);
+    }
 
-    public function scopeActive($query)
+    // ============================ SCOPES =============================
+
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active');
     }
 
-    public function scopeFeatured($query)
+    public function scopeFeatured(Builder $query): Builder
     {
         return $query->where('featured', true);
     }
 
-    public function scopeBestseller($query)
+    public function scopeBestseller(Builder $query): Builder
     {
         return $query->where('bestseller', true);
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | ACCESSORS
-    |--------------------------------------------------------------------------
-    */
+    // ========================== ACCESSORS ============================
 
+    /**
+     * Harga setelah diskon: price - (price * discount / 100).
+     */
     public function getDiscountedPriceAttribute(): float
     {
-        if ($this->discount > 0) {
-            return (float) ($this->price - ($this->price * $this->discount / 100));
+        $price = (float) $this->price;
+        $discount = (int) $this->discount;
+
+        if ($discount <= 0) {
+            return $price;
         }
-        return (float) $this->price;
+
+        return round($price - ($price * $discount / 100), 2);
     }
 
+    /**
+     * Rata-rata rating dari review yang approved.
+     */
     public function getAverageRatingAttribute(): float
     {
-        $avg = $this->reviews()->where('status', true)->avg('rating');
-        return $avg ? (float) round($avg, 1) : 0.0;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | SEARCHABLE (LARAVEL SCOUT)
-    |--------------------------------------------------------------------------
-    */
-
-    public function toSearchableArray(): array
-    {
-        return [
-            'id' => $this->id,
-            'title' => $this->title,
-            'description' => $this->description,
-            'price' => (float) $this->price,
-            'status' => $this->status,
-            'category_id' => $this->category_id,
-            'subcategory_id' => $this->subcategory_id,
-            'bestseller' => $this->bestseller,
-            'featured' => $this->featured,
-            'instructor_name' => $this->instructor->name ?? '',
-            'category_name' => $this->category->name ?? '',
-        ];
+        return (float) $this->reviews()
+            ->where('status', true)
+            ->avg('rating') ?: 0.0;
     }
 }

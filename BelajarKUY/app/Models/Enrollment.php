@@ -6,11 +6,21 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Enrollment model (NEW in v2).
+ *
+ * Menyediakan akses cepat ke kursus yang sudah di-enroll user
+ * tanpa harus join ke tabel orders + payments.
+ */
 class Enrollment extends Model
 {
     use HasFactory;
 
-    public $timestamps = false; // enrollment table has enrolled_at timestamp, not standard Laravel timestamps
+    /**
+     * Enrollment tidak pakai updated_at — hanya enrolled_at.
+     * Disable timestamps Laravel standar.
+     */
+    public $timestamps = false;
 
     protected $fillable = [
         'user_id',
@@ -19,9 +29,14 @@ class Enrollment extends Model
         'enrolled_at',
     ];
 
-    protected $casts = [
-        'enrolled_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'enrolled_at' => 'datetime',
+        ];
+    }
+
+    // ========================= RELATIONSHIPS =========================
 
     public function user(): BelongsTo
     {

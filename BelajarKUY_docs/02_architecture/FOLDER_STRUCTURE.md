@@ -139,7 +139,8 @@ BelajarKUY/
 │
 ├── public/
 │   └── build/                          # Vite compiled assets
-│   # NOTE: Media (gambar) disimpan di Cloudinary, BUKAN di public/uploads/
+│   # NOTE: Media (gambar, thumbnail, foto profil) disimpan di Cloudinary (lihat MODERN_TECH_STACK_RECOMMENDATIONS.md)
+│   # public/uploads/ TIDAK DIPAKAI — hanya public/images/ untuk static assets brand
 │
 ├── resources/
 │   ├── css/

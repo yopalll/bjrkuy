@@ -46,13 +46,13 @@ Tambahkan kolom:
 - timestamps
 
 ### 4. create_sliders_table
-- id, title, description (text), image, button_text, button_url, status (boolean), order (int), timestamps
+- id, title, description (text), image, button_text, button_url, status (boolean), sort_order (int), timestamps
 
 ### 5. create_info_boxes_table
-- id, title, description (text), icon (varchar), order (int), timestamps
+- id, title, description (text), icon (varchar), sort_order (int), timestamps
 
 ### 6. create_partners_table
-- id, name, image, status (boolean), order (int), timestamps
+- id, name, image, status (boolean), sort_order (int), timestamps
 
 ### 7. create_site_infos_table
 - id, key (varchar 255, UNIQUE), value (text), timestamps
@@ -82,10 +82,10 @@ Tambahkan kolom:
 - id, course_id (FK CASCADE), goal (varchar 255), timestamps
 
 ### 11. create_course_sections_table
-- id, course_id (FK CASCADE), title (varchar 255), order (int unsigned, default 0), timestamps
+- id, course_id (FK CASCADE), title (varchar 255), sort_order (int unsigned, default 0), timestamps
 
 ### 12. create_course_lectures_table
-- id, section_id (FK → course_sections.id, CASCADE), title, url (varchar 500, nullable), content (text, nullable), duration (varchar 50, nullable), order (int unsigned), timestamps
+- id, section_id (FK → course_sections.id, CASCADE), title, url (varchar 500, nullable), content (text, nullable), duration (varchar 50, nullable), sort_order (int unsigned), timestamps
 
 ### 13. create_wishlists_table
 - id, user_id (FK CASCADE), course_id (FK CASCADE), timestamps
@@ -106,7 +106,7 @@ Tambahkan kolom:
 - id, payment_id (FK → payments.id, CASCADE), user_id (FK CASCADE), course_id (FK CASCADE), instructor_id (FK → users.id, CASCADE), coupon_id (FK → coupons.id, SET NULL, nullable), original_price (decimal 12,2), discount_amount (decimal 12,2, default 0), final_price (decimal 12,2), status (enum: pending, completed, cancelled, refunded, default 'pending'), timestamps
 
 ### 18. create_reviews_table
-- id, user_id (FK CASCADE), course_id (FK CASCADE), rating (tinyint unsigned, 1-5), comment (text, nullable), status (boolean, default false), timestamps
+- id, user_id (FK CASCADE), course_id (FK CASCADE), rating (tinyint unsigned, 1-5), comment (text, nullable), status (boolean, default true), timestamps
 - UNIQUE constraint pada (user_id, course_id)
 
 ### 19. create_enrollments_table (✨ NEW)

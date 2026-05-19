@@ -1,6 +1,7 @@
 # 🗺️ BelajarKUY — Master Roadmap
 
 > Timeline dan milestone utama pengembangan project BelajarKUY.
+> **Format:** Relative day (D1, D2, ...) — bukan tanggal absolut, agar tetap valid jika jadwal bergeser.
 
 ---
 
@@ -8,50 +9,52 @@
 
 ```mermaid
 gantt
-    title BelajarKUY Development Timeline
-    dateFormat  YYYY-MM-DD
+    title BelajarKUY Development Timeline (Relative Days)
+    dateFormat  X
+    axisFormat  Day %s
     section Phase 1: Foundation
-        Project Setup & Database      :p1, 2026-05-12, 3d
-        Auth System (Breeze + Role)   :p2, after p1, 3d
+        Project Setup & Database      :p1, 0, 3
+        Auth System (Breeze + Role)   :p2, after p1, 3
     section Phase 2: Core Features
-        Landing Page & Frontend Base  :p3, after p1, 5d
-        Category CRUD                 :p4, after p2, 2d
-        Course CRUD (Instructor)      :p5, after p2, 5d
-        Section & Lecture             :p6, after p5, 3d
+        Landing Page & Frontend Base  :p3, after p1, 5
+        Category CRUD                 :p4, after p2, 2
+        Course CRUD (Instructor)      :p5, after p2, 5
+        Section & Lecture             :p6, after p5, 3
     section Phase 3: Commerce
-        Cart & Wishlist               :p7, after p3, 3d
-        Payment Midtrans              :p8, after p7, 5d
-        Coupon System                 :p9, after p8, 2d
-    section Phase 4: Panels
-        Student Dashboard             :p10, after p3, 3d
-        Admin Panel                   :p11, after p4, 7d
-        Instructor Panel              :p12, after p6, 3d
+        Cart & Wishlist               :p7, after p3, 3
+        Payment Midtrans              :p8, after p7, 5
+        Coupon System                 :p9, after p8, 2
+    section Phase 4: Panels & Player
+        Student Dashboard             :p10, after p3, 3
+        Course Player (Watch Page)    :p10b, after p8, 3
+        Admin Panel                   :p11, after p4, 7
+        Instructor Panel              :p12, after p6, 3
     section Phase 5: Polish
-        Review & Rating               :p13, after p10, 3d
-        Site Settings                 :p14, after p11, 2d
-        Testing & Bug Fix             :p15, after p14, 5d
-        Final Polish & Deploy         :p16, after p15, 3d
+        Review & Rating               :p13, after p10, 3
+        Site Settings                 :p14, after p11, 2
+        Testing & Bug Fix             :p15, after p14, 5
+        Final Polish & Deploy         :p16, after p15, 3
 ```
 
 ---
 
 ## Detailed Milestones
 
-### 🔵 Phase 1: Foundation (Hari 1-6)
+### 🔵 Phase 1: Foundation (Day 1-6)
 
 | # | Task | PIC | Est. Days | Deliverable |
 |---|------|-----|-----------|-------------|
 | 1.1 | Init Laravel 12 project | Yosua | 0.5 | Clean Laravel project |
 | 1.2 | Setup TailwindCSS + Vite | Yosua | 0.5 | Working build pipeline |
-| 1.3 | Create all migrations (~20) | Yosua | 1 | All tables created |
-| 1.4 | Create all Eloquent models (~18) | Yosua | 1 | Models with relationships |
-| 1.5 | Create seeders (admin, demo data) | Yosua | 0.5 | Seeded database |
+| 1.3 | Create all migrations (19) | Yosua | 1 | All tables created |
+| 1.4 | Create all Eloquent models (19) | Yosua | 1 | Models with relationships |
+| 1.5 | Create seeders + factories | Yosua | 0.5 | Seeded database |
 | 1.6 | Install Breeze + Auth scaffolding | Albariqi | 0.5 | Login/register works |
 | 1.7 | Implement RoleMiddleware | Albariqi | 0.5 | Role-based access control |
 | 1.8 | Setup Google OAuth (Socialite) | Albariqi | 1 | Google login works |
 | 1.9 | Separate login pages per role | Albariqi | 1 | Admin/instructor/user login |
 
-### 🟢 Phase 2: Core Features (Hari 4-14)
+### 🟢 Phase 2: Core Features (Day 4-14)
 
 | # | Task | PIC | Est. Days |
 |---|------|-----|-----------|
@@ -68,7 +71,7 @@ gantt
 | 2.11 | Section & Lecture CRUD | Albariqi | 2 |
 | 2.12 | Course Goals CRUD | Albariqi | 0.5 |
 
-### 🟡 Phase 3: Commerce (Hari 10-20)
+### 🟡 Phase 3: Commerce (Day 10-20)
 
 | # | Task | PIC | Est. Days |
 |---|------|-----|-----------|
@@ -81,23 +84,24 @@ gantt
 | 3.7 | Order creation after payment | Ray | 1 |
 | 3.8 | Coupon apply system | Ray | 1 |
 
-### 🟠 Phase 4: Panels (Hari 12-24)
+### 🟠 Phase 4: Panels & Course Player (Day 12-24)
 
 | # | Task | PIC | Est. Days |
 |---|------|-----|-----------|
 | 4.1 | Student dashboard | Vascha & Quinsha | 1 |
 | 4.2 | Student enrolled courses | Vascha & Quinsha | 1 |
 | 4.3 | Student profile & settings | Vascha & Quinsha | 1 |
-| 4.4 | Admin dashboard (stats) | Quinsha & Vascha | 1 |
-| 4.5 | Admin course management | Quinsha & Vascha | 1 |
-| 4.6 | Admin instructor management | Quinsha & Vascha | 1 |
-| 4.7 | Admin order management | Quinsha & Vascha | 1 |
-| 4.8 | Admin user management | Quinsha & Vascha | 1 |
-| 4.9 | Admin slider/info/partner CRUD | Quinsha & Vascha | 1 |
-| 4.10 | Instructor dashboard | Albariqi | 1 |
-| 4.11 | Instructor profile & settings | Albariqi | 0.5 |
+| 4.4 | **Course Player (watch page)** | Albariqi + Vascha | 3 |
+| 4.5 | Admin dashboard (stats) | Quinsha & Vascha | 1 |
+| 4.6 | Admin course management | Quinsha & Vascha | 1 |
+| 4.7 | Admin instructor management (view only) | Quinsha & Vascha | 0.5 |
+| 4.8 | Admin order management | Quinsha & Vascha | 1 |
+| 4.9 | Admin user management | Quinsha & Vascha | 1 |
+| 4.10 | Admin slider/info/partner CRUD | Quinsha & Vascha | 1 |
+| 4.11 | Instructor dashboard | Albariqi | 1 |
+| 4.12 | Instructor profile & settings | Albariqi | 0.5 |
 
-### 🔴 Phase 5: Polish (Hari 22-30)
+### 🔴 Phase 5: Polish (Day 22-30)
 
 | # | Task | PIC | Est. Days |
 |---|------|-----|-----------|

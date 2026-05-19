@@ -33,7 +33,7 @@
 - Harga dalam Rupiah (decimal 12,2)
 - Discount dalam persen (0-100)
 - Slug auto-generated dari title (unique)
-- Thumbnail di-upload ke `public/uploads/courses/`
+- **Thumbnail upload ke Cloudinary** (`belajarkuy/courses` folder)
 - Video URL = link YouTube/Vimeo (bukan upload file)
 
 ---

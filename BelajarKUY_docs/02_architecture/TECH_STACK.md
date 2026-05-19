@@ -122,19 +122,24 @@ APP_ENV=local
 APP_DEBUG=true
 APP_URL=http://localhost:8000
 APP_LOCALE=id
+APP_FALLBACK_LOCALE=id
+APP_FAKER_LOCALE=id_ID
+APP_TIMEZONE=Asia/Jakarta
 
 # === DATABASE ===
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=belajarkuy
-DB_USERNAME=root
-DB_PASSWORD=
+# Default: SQLite (zero setup) — ganti ke mysql untuk production parity
+DB_CONNECTION=sqlite
+# DB_CONNECTION=mysql
+# DB_HOST=127.0.0.1
+# DB_PORT=3306
+# DB_DATABASE=belajarkuy
+# DB_USERNAME=root
+# DB_PASSWORD=
 
-# === MIDTRANS ===
+# === MIDTRANS (SANDBOX ONLY — ADR-004) ===
+# is_production HARDCODED di config/midtrans.php — tidak dari env
 MIDTRANS_SERVER_KEY=
 MIDTRANS_CLIENT_KEY=
-MIDTRANS_IS_PRODUCTION=false
 MIDTRANS_MERCHANT_ID=
 
 # === GOOGLE OAUTH ===

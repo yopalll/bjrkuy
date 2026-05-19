@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,15 +12,26 @@ class Slider extends Model
 
     protected $fillable = [
         'title',
-        'description',
-        'image',
-        'button_text',
-        'button_url',
+        'sub_title',
+        'link',
+        'image_url',
+        'image_public_id',
         'status',
-        'sort_order',
+        'order_position',
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'status' => 'boolean',
+            'order_position' => 'integer',
+        ];
+    }
+
+    // ============================ SCOPES =============================
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query->where('status', true)->orderBy('order_position');
+    }
 }

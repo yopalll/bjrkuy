@@ -11,12 +11,16 @@ class Partner extends Model
 
     protected $fillable = [
         'name',
-        'image',
-        'status',
-        'sort_order',
+        'link',
+        'logo_url',
+        'logo_public_id',
+        'order_position',
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'order_position' => 'integer',
+        ];
+    }
 }

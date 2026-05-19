@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,11 +24,16 @@ class Order extends Model
         'status',
     ];
 
-    protected $casts = [
-        'original_price' => 'decimal:2',
-        'discount_amount' => 'decimal:2',
-        'final_price' => 'decimal:2',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'original_price' => 'decimal:2',
+            'discount_amount' => 'decimal:2',
+            'final_price' => 'decimal:2',
+        ];
+    }
+
+    // ========================= RELATIONSHIPS =========================
 
     public function payment(): BelongsTo
     {
@@ -59,12 +65,14 @@ class Order extends Model
         return $this->hasOne(Enrollment::class);
     }
 
-    public function scopeCompleted($query)
+    // ============================ SCOPES =============================
+
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->where('status', 'completed');
     }
 
-    public function scopePending($query)
+    public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');
     }

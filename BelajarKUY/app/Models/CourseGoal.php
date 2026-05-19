@@ -15,6 +15,8 @@ class CourseGoal extends Model
         'goal',
     ];
 
+    // ========================= RELATIONSHIPS =========================
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);

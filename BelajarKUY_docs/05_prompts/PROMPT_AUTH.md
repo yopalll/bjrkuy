@@ -73,7 +73,7 @@ Kamu adalah senior Laravel 12 developer. Bangun sistem autentikasi lengkap untuk
 - Code dalam English
 - Gunakan TailwindCSS untuk styling
 - Validasi menggunakan Form Request classes
-- Photo upload ke public/uploads/profiles/
+- **Photo upload ke Cloudinary** (`belajarkuy/profiles` folder) — JANGAN ke public/uploads/
 - JANGAN modifikasi migration users (sudah final)
 
 ## OUTPUT:

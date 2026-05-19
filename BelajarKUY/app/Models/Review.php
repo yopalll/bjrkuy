@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,10 +19,14 @@ class Review extends Model
         'status',
     ];
 
-    protected $casts = [
-        'status' => 'boolean',
-        'rating' => 'integer',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'rating' => 'integer',
+        ];
+    }
+
+    // ========================= RELATIONSHIPS =========================
 
     public function user(): BelongsTo
     {
@@ -33,8 +38,13 @@ class Review extends Model
         return $this->belongsTo(Course::class);
     }
 
-    public function scopeApproved($query)
+    // ============================ SCOPES =============================
+
+    /**
+     * Review yang sudah di-approve oleh admin / aktif.
+     */
+    public function scopeApproved(Builder $query): Builder
     {
-        return $query->where('status', true);
+        return $query->where('status', 'approved');
     }
 }

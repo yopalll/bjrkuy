@@ -170,11 +170,16 @@ php artisan scout:import "App\Models\Course"
 
 ## Step 7: Akun Default (Setelah Seeder)
 
-| Role | Email | Password |
-|------|-------|----------|
-| Admin | admin@belajarkuy.com | password |
-| Instructor | instructor@belajarkuy.com | password |
-| Student | student@belajarkuy.com | password |
+Password untuk semua akun: **`password`**
+
+| Role | Email |
+|------|-------|
+| Admin | `admin@belajarkuy.test` |
+| Instructor | `ray@belajarkuy.test` |
+| Instructor | `yosua@belajarkuy.test` |
+| Student | `student@belajarkuy.test` |
+
+> Domain `.test` dipakai intentional (RFC 2606 reserved untuk testing) — tidak konflik dengan domain asli.
 
 ---
 

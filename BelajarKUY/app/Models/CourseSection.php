@@ -17,6 +17,15 @@ class CourseSection extends Model
         'sort_order',
     ];
 
+    protected function casts(): array
+    {
+        return [
+            'sort_order' => 'integer',
+        ];
+    }
+
+    // ========================= RELATIONSHIPS =========================
+
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);

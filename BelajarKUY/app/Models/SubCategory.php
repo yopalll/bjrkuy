@@ -17,11 +17,24 @@ class SubCategory extends Model
         'slug',
     ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | RELATIONSHIPS
-    |--------------------------------------------------------------------------
-    */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($subCategory) {
+            if (empty($subCategory->slug)) {
+                $subCategory->slug = \Illuminate\Support\Str::slug($subCategory->name);
+            }
+        });
+
+        static::updating(function ($subCategory) {
+            if ($subCategory->isDirty('name') && empty($subCategory->slug)) {
+                $subCategory->slug = \Illuminate\Support\Str::slug($subCategory->name);
+            }
+        });
+    }
+
+    // ========================= RELATIONSHIPS =========================
 
     public function category(): BelongsTo
     {

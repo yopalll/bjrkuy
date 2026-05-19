@@ -6,14 +6,16 @@
 
 ## Route Summary
 
-| Grup | Jumlah Routes | Middleware |
-|------|---------------|-----------|
-| Public (Frontend) | ~10 | none |
+| Grup | Jumlah Routes (approx) | Middleware |
+|------|------------------------|-----------|
+| Public (Frontend) | ~12 | none |
 | Auth (Breeze) | ~10 | guest / auth |
-| Student Panel | ~8 | auth, role:user |
-| Instructor Panel | ~15 | auth, role:instructor |
-| Admin Panel | ~25 | auth, role:admin |
-| **TOTAL** | **~68 routes** | |
+| Student Panel | ~12 | auth, verified, role:user |
+| Instructor Panel | ~18 | auth, verified, role:instructor |
+| Admin Panel | ~20 | auth, verified, role:admin |
+| **TOTAL** | **~72 routes** | |
+
+> **Route naming:** untuk student, prefix URL `/user/*` dan name `user.*` (match DB `role='user'`). Controller/folder pakai "Student" (business term). Lihat `ADR-007`.
 
 ---
 
@@ -90,6 +92,9 @@ Route::middleware('auth')->group(function () {
 
 ## 4. Student Routes (`/user/*`)
 
+> Student = user dengan `role='user'`. Folder & controller pakai "Student" (business term).
+> Lihat `01_guides/GLOSSARY.md` dan `ADR-007` untuk penjelasan.
+
 ```php
 Route::middleware(['auth', 'verified', 'role:user'])
     ->prefix('user')
@@ -111,6 +116,11 @@ Route::middleware(['auth', 'verified', 'role:user'])
 
         // My Courses (enrolled)
         Route::get('/my-courses', [StudentDashboardController::class, 'myCourses'])->name('courses');
+
+        // Course Player (F13)
+        Route::get('/course/{slug}/watch', [CoursePlayerController::class, 'index'])->name('course.watch.entry');
+        Route::get('/course/{slug}/watch/{lecture}', [CoursePlayerController::class, 'show'])->name('course.watch');
+        Route::post('/lecture/{lecture}/complete', [CoursePlayerController::class, 'markComplete'])->name('lecture.complete');
     });
 ```
 
@@ -179,14 +189,21 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::resource('category', AdminCategoryController::class);
         Route::resource('subcategory', AdminSubcategoryController::class);
 
-        // Course Management
-        Route::resource('course', AdminCourseController::class);
-        Route::post('/course/status', [AdminCourseController::class, 'updateStatus'])->name('course.status');
+        // Course Management (moderation)
+        Route::get('/course', [AdminCourseController::class, 'index'])->name('course.index');
+        Route::get('/course/{course}', [AdminCourseController::class, 'show'])->name('course.show');
+        Route::post('/course/{course}/approve', [AdminCourseController::class, 'approve'])->name('course.approve');
+        Route::post('/course/{course}/reject', [AdminCourseController::class, 'reject'])->name('course.reject');
+        // Note: no create/edit at admin level — itu tugas instructor
 
-        // Instructor Management
-        Route::resource('instructor', AdminInstructorController::class);
-        Route::post('/instructor/status', [AdminInstructorController::class, 'updateStatus'])->name('instructor.status');
-        Route::get('/instructor/active', [AdminInstructorController::class, 'activeList'])->name('instructor.active');
+        // Instructor List (VIEW ONLY — ADR-006)
+        Route::get('/instructor', [AdminInstructorController::class, 'index'])->name('instructor.index');
+        Route::get('/instructor/{user}', [AdminInstructorController::class, 'show'])->name('instructor.show');
+        // Note: no approve/block/delete — ADR-006
+
+        // User List (Students)
+        Route::get('/user', [AdminUserController::class, 'index'])->name('user.index');
+        Route::get('/user/{user}', [AdminUserController::class, 'show'])->name('user.show');
 
         // Order Management
         Route::resource('order', AdminOrderController::class);
@@ -195,23 +212,19 @@ Route::middleware(['auth', 'verified', 'role:admin'])
         Route::resource('slider', AdminSliderController::class);
 
         // Info Box
-        Route::resource('info', AdminInfoBoxController::class);
+        Route::resource('info-box', AdminInfoBoxController::class);
 
         // Partner
         Route::resource('partner', AdminPartnerController::class);
 
-        // Site Settings
+        // Site Settings (key-value DB-backed: logo, contact, social media)
         Route::resource('site-setting', AdminSiteSettingController::class);
 
-        // Settings
-        Route::get('/mail-setting', [AdminSettingController::class, 'mailSetting'])->name('mail.setting');
-        Route::put('/mail-setting/update', [AdminSettingController::class, 'updateMail'])->name('mail.update');
-
-        Route::get('/midtrans-setting', [AdminSettingController::class, 'midtransSetting'])->name('midtrans.setting');
-        Route::post('/midtrans-setting/update', [AdminSettingController::class, 'updateMidtrans'])->name('midtrans.update');
-
-        Route::get('/google-setting', [AdminSettingController::class, 'googleSetting'])->name('google.setting');
-        Route::post('/google-setting/update', [AdminSettingController::class, 'updateGoogle'])->name('google.update');
+        // ⚠️ REMOVED per audit (lihat F07_ADMIN_PANEL.md):
+        //   - Mail Setting UI — credentials di .env
+        //   - Midtrans Setting UI — hardcoded sandbox (ADR-004)
+        //   - Google Setting UI — credentials di .env
+        //   - Cloudinary Setting UI — credentials di .env
 
         // Review Management
         Route::get('/reviews', [AdminReviewController::class, 'index'])->name('reviews.index');
@@ -248,6 +261,9 @@ class RoleMiddleware
 {
     public function handle(Request $request, Closure $next, string $role): Response
     {
+        // Alias: 'student' → 'user' (lihat ADR-007 & GLOSSARY.md)
+        $role = $role === 'student' ? 'user' : $role;
+
         if (!auth()->check() || auth()->user()->role !== $role) {
             abort(403, 'Unauthorized');
         }
@@ -256,6 +272,8 @@ class RoleMiddleware
     }
 }
 ```
+
+Dengan alias di atas, route bisa pakai `role:student` (lebih natural) atau `role:user` (DB-match) — dua-duanya jalan.
 
 ---
 

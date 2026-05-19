@@ -48,13 +48,12 @@ Buat 19 model berikut di `app/Models/`:
 - relationships: course() belongsTo
 
 ### 6. CourseSection.php
-- fillable: course_id, title, order
-- relationships: course() belongsTo, lectures() hasMany
-- default ordering: orderBy('order')
+- fillable: course_id, title, sort_order
+- relationships: course() belongsTo, lectures() hasMany (default ordering by sort_order)
 
 ### 7. CourseLecture.php
-- fillable: section_id, title, url, content, duration, order
-- relationships: section() belongsTo CourseSection
+- fillable: section_id, title, url, content, duration, sort_order
+- relationships: section() belongsTo CourseSection, completions() hasMany LectureCompletion
 
 ### 8. Wishlist.php
 - fillable: user_id, course_id
@@ -90,14 +89,14 @@ Buat 19 model berikut di `app/Models/`:
 - scopes: scopeApproved (status=true)
 
 ### 14. Slider.php
-- fillable: title, description, image, button_text, button_url, status, order
+- fillable: title, description, image, button_text, button_url, status, sort_order
 - casts: status → boolean
 
 ### 15. InfoBox.php
-- fillable: title, description, icon, order
+- fillable: title, description, icon, sort_order
 
 ### 16. Partner.php
-- fillable: name, image, status, order
+- fillable: name, image, status, sort_order
 - casts: status → boolean
 
 ### 17. SiteInfo.php
@@ -106,11 +105,13 @@ Buat 19 model berikut di `app/Models/`:
 ### 18. Enrollment.php (✨ NEW)
 - fillable: user_id, course_id, order_id, enrolled_at
 - casts: enrolled_at → datetime
+- `$timestamps = false` — hanya punya kolom enrolled_at, bukan created_at/updated_at
 - relationships: user() belongsTo, course() belongsTo, order() belongsTo
 
 ### 19. LectureCompletion.php (✨ NEW)
 - fillable: user_id, lecture_id, completed_at
 - casts: completed_at → datetime
+- `$timestamps = false` — hanya punya kolom completed_at, bukan created_at/updated_at
 - relationships: user() belongsTo, lecture() belongsTo CourseLecture
 
 ## CONSTRAINT:

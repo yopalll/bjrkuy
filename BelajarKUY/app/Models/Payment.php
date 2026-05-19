@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -21,10 +22,15 @@ class Payment extends Model
         'midtrans_response',
     ];
 
-    protected $casts = [
-        'total_amount' => 'decimal:2',
-        'midtrans_response' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'total_amount' => 'decimal:2',
+            'midtrans_response' => 'array',
+        ];
+    }
+
+    // ========================= RELATIONSHIPS =========================
 
     public function user(): BelongsTo
     {
@@ -36,12 +42,17 @@ class Payment extends Model
         return $this->hasMany(Order::class);
     }
 
-    public function scopeCompleted($query)
+    // ============================ SCOPES =============================
+
+    /**
+     * Pembayaran yang sudah berhasil (settlement atau capture).
+     */
+    public function scopeCompleted(Builder $query): Builder
     {
         return $query->whereIn('status', ['settlement', 'capture']);
     }
 
-    public function scopePending($query)
+    public function scopePending(Builder $query): Builder
     {
         return $query->where('status', 'pending');
     }

@@ -6,6 +6,13 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * Cart model.
+ *
+ * NOTE: Harga TIDAK disimpan di cart — dihitung real-time dari
+ * course.price dan course.discount untuk menghindari harga basi.
+ * instructor_id juga tidak disimpan — gunakan $cart->course->instructor.
+ */
 class Cart extends Model
 {
     use HasFactory;
@@ -14,6 +21,8 @@ class Cart extends Model
         'user_id',
         'course_id',
     ];
+
+    // ========================= RELATIONSHIPS =========================
 
     public function user(): BelongsTo
     {

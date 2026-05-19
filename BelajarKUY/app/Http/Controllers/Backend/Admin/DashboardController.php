@@ -24,6 +24,6 @@ class DashboardController extends Controller
             'total_orders'      => Order::where('status', 'completed')->count(),
         ];
 
-        return view('backend.admin.dashboard', compact('stats'));
+        return view('admin.dashboard', compact('stats'));
     }
 }

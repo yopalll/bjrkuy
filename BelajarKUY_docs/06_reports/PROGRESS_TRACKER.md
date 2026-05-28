@@ -4,7 +4,7 @@
 
 ---
 
-> **Update terakhir:** 17 Mei 2026 — 21:06 WIB oleh Antigravity (AI Agent) — Albariqi Tarigan session
+> **Update terakhir:** 19 Mei 2026 — 22:21 WIB oleh Antigravity (AI Agent)
 
 ---
 
@@ -14,7 +14,7 @@
 |-------|----------|--------|
 | Project Setup | 100% | 🟢 Selesai |
 | Database (Migrations + Models) | 100% | 🟢 Selesai |
-| Auth System | 70% | 🟡 On Progress |
+| Auth System | 100% | 🟢 Selesai |
 | Landing Page | 0% | 🔴 Belum |
 | Category CRUD | 0% | 🔴 Belum |
 | Course CRUD (Instructor) | 0% | 🔴 Belum |
@@ -25,7 +25,7 @@
 | Review & Rating | 0% | 🔴 Belum |
 | Coupon System | 0% | 🔴 Belum |
 | Site Settings | 0% | 🔴 Belum |
-| **OVERALL** | **25%** | **🟡 On Progress** |
+| **OVERALL** | **30%** | **🟡 On Progress** |
 
 ---
 
@@ -42,8 +42,7 @@
 
 ## 🔄 SEDANG DIKERJAKAN
 
-- Fitur Auth System — Role-based redirect post-login + post-register ✅
-- Buat dashboard placeholder untuk Admin, Instructor, Student ✅
+- Phase 2: Core Features — Landing page, layout utama, komponen
 
 ---
 
@@ -62,7 +61,7 @@
 - [x] Post-login redirect logic (match role → dashboard)
 - [x] Post-register redirect logic (match role → dashboard)
 - [x] Role selection di form register (Student / Instructor)
-- [ ] Separate login pages per role (admin/login, instructor/login — next)
+- [x] Separate login pages per role (`/admin/login` dengan tampilan khusus)
 - [ ] Course CRUD (instructor) — Phase P5
 
 ### Phase 2: Core Features
@@ -161,7 +160,7 @@
   * ADR-007: Role naming duality (user/student)
 - Zero schema drift. Zero terminology contradiction. Glossary-driven clarity.
 - Branch: `docs/audit-cleanup`
-- Status: Documentation production-ready. AI agents bisa execute task tanpa ambiguitas.
+  - Status: Documentation production-ready. AI agents bisa execute task tanpa ambiguitas.
 - Next: Phase 2 kickoff — Auth System (Albariqi)
 
 ### Session 6 — 15 Mei 2026 (Antigravity)
@@ -188,6 +187,19 @@
 - Status: Auth System Phase P2 70% done. RoleMiddleware ✅ Breeze ✅ Dashboard per role ✅
 - Next: Separate login pages per role (admin/login, instructor/login) — Albariqi
 - Report: `06_reports/REPORT_2026-05-17_AUTH_SYSTEM.md`
+
+### Session 8 — 19 Mei 2026 (Antigravity)
+- Fixed: `routes/web.php` — admin routes kini dilindungi `role:admin` middleware (sebelumnya hanya auth+verified)
+- Added: Route `instructor.dashboard` + `student.dashboard` dengan middleware `role:instructor` dan `role:user`
+- Fixed: `/dashboard` kini smart redirect berdasarkan role (admin→admin.dashboard, instructor→instructor.dashboard, user→student.dashboard)
+- Fixed: `AuthenticatedSessionController` — redirect student ke `student.dashboard` (konsisten)
+- Fixed: `RegisteredUserController` — redirect student ke `student.dashboard` (konsisten)
+- Added: Route semua Student panel (`/student/dashboard`, `/student/my-courses`, `/student/wishlist`, dll)
+- Created: `resources/views/auth/admin-login.blade.php` — halaman login khusus admin (dark theme, badge admin only)
+- Added: Route `/admin/login` → `admin.login.page` (guest middleware, redirect jika sudah login sebagai admin)
+- Status: **Phase 1 Foundation 100% SELESAI** ✅
+- Next: Phase 2 — Landing page, layout utama, komponen (Navbar, Footer, Course Card)
+- Report: `06_reports/REPORT_2026-05-19_PHASE1_COMPLETION.md`
 
 ---
 

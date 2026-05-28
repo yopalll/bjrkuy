@@ -27,7 +27,7 @@
                 <div class="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm space-y-8">
                     <h2 class="text-xl font-bold text-gray-900 border-b border-gray-50 pb-5">Informasi Profil</h2>
 
-                    <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <form action="{{ route('student.profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @csrf
 
                         <!-- Photo Section -->

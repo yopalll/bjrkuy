@@ -30,11 +30,7 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
         
-        return match($user->role) {
-            'admin' => redirect()->intended(route('admin.dashboard')),
-            'instructor' => redirect()->intended(route('instructor.dashboard')),
-            default => redirect()->intended(route('dashboard')),
-        };
+        return redirect()->intended(route('dashboard'));
     }
 
     /**

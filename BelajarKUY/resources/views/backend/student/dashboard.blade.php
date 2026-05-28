@@ -101,7 +101,7 @@
                             <h2 class="text-xl font-bold text-gray-900">Kursus Yang Sedang Dipelajari</h2>
                             <p class="text-xs text-gray-500 mt-0.5">Kursus terdaftar terakhir Anda beserta progresnya</p>
                         </div>
-                        <a href="{{ route('user.my-courses') }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
+                        <a href="{{ route('student.my-courses') }}" class="text-sm font-bold text-indigo-600 hover:text-indigo-500 transition-colors duration-200">
                             Lihat Semua →
                         </a>
                     </div>
@@ -171,7 +171,7 @@
                             <h2 class="text-xl font-bold text-gray-900">Profil Saya</h2>
                             <p class="text-xs text-gray-500 mt-0.5">Informasi kontak dan deskripsi bio singkat Anda</p>
                         </div>
-                        <a href="{{ route('user.profile') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors duration-200">
+                        <a href="{{ route('student.profile') }}" class="inline-flex items-center justify-center px-4 py-2 rounded-full text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition-colors duration-200">
                             Edit Profil
                         </a>
                     </div>

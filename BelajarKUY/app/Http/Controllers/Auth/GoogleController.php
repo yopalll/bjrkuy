@@ -67,11 +67,7 @@ class GoogleController extends Controller
         Auth::login($user, remember: true);
         request()->session()->regenerate();
 
-        // Redirect berdasarkan role (F01 Redirect Logic)
-        return match ($user->role) {
-            'admin'      => redirect()->intended(route('admin.dashboard', absolute: false)),
-            'instructor' => redirect()->intended(route('instructor.dashboard', absolute: false)),
-            default      => redirect()->intended(route('dashboard', absolute: false)),
-        };
+        // Semua role redirect ke /dashboard universal (akan auto-detect role)
+        return redirect()->intended(route('dashboard'));
     }
 }

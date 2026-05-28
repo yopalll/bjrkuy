@@ -80,7 +80,7 @@
                                             </form>
 
                                             <!-- Delete Wishlist Form -->
-                                            <form action="{{ route('user.wishlist.remove', $wishlist->id) }}" method="POST">
+                                            <form action="{{ route('student.wishlist.remove', $wishlist->id) }}" method="POST">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="p-3 text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 rounded-2xl transition-colors duration-200 focus:outline-none" title="Hapus dari Wishlist">

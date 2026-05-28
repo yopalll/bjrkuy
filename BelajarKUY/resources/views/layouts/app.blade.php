@@ -4,282 +4,155 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="description" content="@yield('description', 'BelajarKUY — Platform E-Learning Modern untuk Pelajar Indonesia')">
 
-    <title>BelajarKUY</title>
+    <title>@yield('title', 'BelajarKUY — Platform E-Learning')</title>
 
-    <!-- Font -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    @stack('styles')
 </head>
+<body class="bg-gray-50 text-gray-800 antialiased" style="font-family: 'Inter', 'Poppins', sans-serif;">
 
-<body 
-    class="bg-slate-50 text-slate-800 antialiased"
-    style="font-family: 'Poppins', sans-serif;"
->
+    <!-- ===== NAVBAR ===== -->
+    <nav class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
 
-    <div class="min-h-screen">
+                <!-- Logo -->
+                <a href="{{ route('home') }}" class="flex items-center space-x-2 group">
+                    <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center shadow-sm group-hover:bg-indigo-700 transition-colors">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                        </svg>
+                    </div>
+                    <span class="text-xl font-bold text-gray-900 group-hover:text-indigo-600 transition-colors">BelajarKUY</span>
+                </a>
 
-        <!-- Navbar -->
-        <nav class="flex justify-between items-center px-10 py-5 bg-white shadow-md">
-
-            <h1 class="text-3xl font-bold text-blue-600">
-                BelajarKUY
-            </h1>
-
-            <ul class="flex gap-8 font-medium">
-                <li>
-                    <a href="#" class="hover:text-blue-600 transition">
-                        Home
-                    </a>
-                </li>
-
-                <li>
-                    <a href="#" class="hover:text-blue-600 transition">
-                        Course
-                    </a>
-                </li>
-
-                <li>
-                    <a href="#" class="hover:text-blue-600 transition">
-                        Mentor
-                    </a>
-                </li>
-
-                <li>
-                    <a href="#" class="hover:text-blue-600 transition">
-                        About
-                    </a>
-                </li>
-            </ul>
-
-            <button class="bg-blue-600 text-white px-5 py-2 rounded-xl shadow-lg hover:scale-105 transition duration-300">
-                Login
-            </button>
-
-        </nav>
-
-        <!-- Header -->
-        @isset($header)
-            <header class="bg-white shadow">
-                <div class="max-w-7xl mx-auto py-6 px-4">
-                    {{ $header }}
-                </div>
-            </header>
-        @endisset
-
-        <!-- Content -->
-        <main>
-
-            <!-- Hero Section -->
-            <section class="px-10 py-20 flex items-center justify-between">
-
-                <div class="max-w-xl">
-
-                    <h1 class="text-6xl font-bold leading-tight">
-                        Tingkatkan Skill Bersama
-                        <span class="text-blue-600">
-                            BelajarKUY
-                        </span>
-                    </h1>
-
-                    <p class="mt-6 text-slate-600 text-lg">
-                        Platform pembelajaran online modern untuk mahasiswa dan pelajar Indonesia.
-                    </p>
-
-                    <button class="mt-8 bg-blue-600 text-white px-8 py-4 rounded-2xl shadow-xl hover:scale-105 transition duration-300">
-                        Mulai Belajar
-                    </button>
-
+                <!-- Nav Links (Desktop) -->
+                <div class="hidden md:flex items-center space-x-6">
+                    <a href="{{ route('home') }}" class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">Beranda</a>
+                    <a href="{{ route('home') }}#courses" class="text-sm font-medium text-gray-600 hover:text-indigo-600 transition-colors">Kursus</a>
                 </div>
 
-                <img 
-                    src="{{ asset('images/hero.png') }}"
-                    class="w-[500px]"
-                    alt="Hero Image"
-                >
+                <!-- Auth Section -->
+                <div class="flex items-center space-x-3">
+                    @auth
+                        {{-- Logged In: show role badge + dashboard link + logout --}}
+                        <div class="flex items-center space-x-3">
+                            {{-- Role Badge --}}
+                            @php
+                                $roleLabel = match(Auth::user()->role) {
+                                    'admin' => ['label' => 'Admin', 'class' => 'bg-red-100 text-red-700 border-red-200'],
+                                    'instructor' => ['label' => 'Instruktur', 'class' => 'bg-amber-100 text-amber-700 border-amber-200'],
+                                    default => ['label' => 'Siswa', 'class' => 'bg-indigo-100 text-indigo-700 border-indigo-200'],
+                                };
+                                $dashboardRoute = match(Auth::user()->role) {
+                                    'admin' => route('admin.dashboard'),
+                                    'instructor' => route('instructor.dashboard'),
+                                    default => route('student.dashboard'),
+                                };
+                            @endphp
 
-            </section>
+                            <a href="{{ $dashboardRoute }}"
+                               class="hidden sm:flex items-center space-x-2 px-3 py-1.5 rounded-lg border {{ $roleLabel['class'] }} text-xs font-semibold transition-opacity hover:opacity-80">
+                                <img src="{{ Auth::user()->photo ? asset(Auth::user()->photo) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=4F46E5&color=fff&size=32' }}"
+                                     class="w-5 h-5 rounded-full" alt="">
+                                <span>{{ Auth::user()->name }}</span>
+                                <span class="opacity-60">·</span>
+                                <span>{{ $roleLabel['label'] }}</span>
+                            </a>
 
-            <!-- Popular Course -->
-            <section class="px-10 py-10">
-
-                <h2 class="text-4xl font-bold mb-10">
-                    Popular Course
-                </h2>
-
-                <div class="grid grid-cols-3 gap-8">
-
-                    <!-- Card 1 -->
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden hover:scale-105 transition duration-300">
-
-                        <img 
-                            src="{{ asset('images/course1.jpg') }}"
-                            class="h-52 w-full object-cover"
-                        >
-
-                        <div class="p-6">
-
-                            <h3 class="text-2xl font-bold">
-                                UI/UX Design
-                            </h3>
-
-                            <p class="mt-3 text-slate-600">
-                                Belajar design modern dari dasar hingga mahir.
-                            </p>
-
-                            <button class="mt-5 bg-blue-600 text-white px-5 py-3 rounded-xl">
-                                Lihat Course
-                            </button>
-
+                            {{-- Logout --}}
+                            <form method="POST" action="{{ route('logout') }}">
+                                @csrf
+                                <button type="submit"
+                                    class="px-3 py-1.5 text-xs font-semibold text-gray-600 hover:text-red-600 border border-gray-200 hover:border-red-200 rounded-lg transition-colors">
+                                    Keluar
+                                </button>
+                            </form>
                         </div>
-
-                    </div>
-
-                    <!-- Card 2 -->
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden hover:scale-105 transition duration-300">
-
-                        <img 
-                            src="{{ asset('images/course2.jpg') }}"
-                            class="h-52 w-full object-cover"
-                        >
-
-                        <div class="p-6">
-
-                            <h3 class="text-2xl font-bold">
-                                Web Development
-                            </h3>
-
-                            <p class="mt-3 text-slate-600">
-                                Kuasai HTML, CSS, Laravel, dan React modern.
-                            </p>
-
-                            <button class="mt-5 bg-blue-600 text-white px-5 py-3 rounded-xl">
-                                Lihat Course
-                            </button>
-
-                        </div>
-
-                    </div>
-
-                    <!-- Card 3 -->
-                    <div class="bg-white rounded-3xl shadow-xl overflow-hidden hover:scale-105 transition duration-300">
-
-                        <img 
-                            src="{{ asset('images/course3.jpg') }}"
-                            class="h-52 w-full object-cover"
-                        >
-
-                        <div class="p-6">
-
-                            <h3 class="text-2xl font-bold">
-                                Data Science
-                            </h3>
-
-                            <p class="mt-3 text-slate-600">
-                                Pelajari data analysis dan machine learning.
-                            </p>
-
-                            <button class="mt-5 bg-blue-600 text-white px-5 py-3 rounded-xl">
-                                Lihat Course
-                            </button>
-
-                        </div>
-
-                    </div>
-
+                    @else
+                        {{-- Guest: Login + Register + Google --}}
+                        <a href="{{ route('login') }}"
+                           id="nav-login-btn"
+                           class="px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 border border-indigo-200 hover:border-indigo-400 rounded-lg transition-colors">
+                            Masuk
+                        </a>
+                        <a href="{{ route('register') }}"
+                           id="nav-register-btn"
+                           class="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm shadow-indigo-200">
+                            Daftar
+                        </a>
+                        <a href="{{ route('auth.google') }}"
+                           id="nav-google-btn"
+                           title="Masuk dengan Google"
+                           class="hidden sm:flex items-center justify-center w-9 h-9 border border-gray-200 rounded-lg hover:border-gray-300 hover:bg-gray-50 transition-colors">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                            </svg>
+                        </a>
+                    @endauth
                 </div>
 
-            </section>
+            </div>
+        </div>
+    </nav>
+    <!-- ===== END NAVBAR ===== -->
 
-            <!-- Mentor -->
-            <section class="px-10 py-20">
-
-                <h2 class="text-4xl font-bold mb-10">
-                    Mentor Terbaik
-                </h2>
-
-                <div class="grid grid-cols-3 gap-8">
-
-                    <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
-
-                        <img 
-                            src="{{ asset('images/mentor1.jpg') }}"
-                            class="w-32 h-32 rounded-full mx-auto object-cover"
-                        >
-
-                        <h3 class="mt-5 text-2xl font-bold">
-                            John Doe
-                        </h3>
-
-                        <p class="text-slate-500">
-                            UI/UX Expert
-                        </p>
-
-                    </div>
-
-                    <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
-
-                        <img 
-                            src="{{ asset('images/mentor2.jpg') }}"
-                            class="w-32 h-32 rounded-full mx-auto object-cover"
-                        >
-
-                        <h3 class="mt-5 text-2xl font-bold">
-                            Jane Smith
-                        </h3>
-
-                        <p class="text-slate-500">
-                            Fullstack Developer
-                        </p>
-
-                    </div>
-
-                    <div class="bg-white p-8 rounded-3xl shadow-xl text-center">
-
-                        <img 
-                            src="{{ asset('images/mentor3.jpg') }}"
-                            class="w-32 h-32 rounded-full mx-auto object-cover"
-                        >
-
-                        <h3 class="mt-5 text-2xl font-bold">
-                            Michael Lee
-                        </h3>
-
-                        <p class="text-slate-500">
-                            Data Scientist
-                        </p>
-
-                    </div>
-
+    <!-- ===== MAIN CONTENT ===== -->
+    <main>
+        @if(session('success'))
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    {{ session('success') }}
                 </div>
+            </div>
+        @endif
 
-            </section>
+        @if(session('error'))
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+                <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm font-medium flex items-center gap-2">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                    {{ session('error') }}
+                </div>
+            </div>
+        @endif
 
-            {{ $slot }}
+        @yield('content')
+    </main>
+    <!-- ===== END MAIN CONTENT ===== -->
 
-        </main>
+    <!-- ===== FOOTER ===== -->
+    <footer class="bg-gray-900 text-white mt-20 py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div class="flex items-center justify-center space-x-2 mb-3">
+                <div class="w-6 h-6 bg-indigo-500 rounded-md flex items-center justify-center">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <span class="text-lg font-bold">BelajarKUY</span>
+            </div>
+            <p class="text-gray-400 text-sm">Platform pembelajaran online modern untuk pelajar Indonesia.</p>
+            <p class="text-gray-600 text-xs mt-4">© {{ date('Y') }} BelajarKUY. All rights reserved.</p>
+        </div>
+    </footer>
+    <!-- ===== END FOOTER ===== -->
 
-        <!-- Footer -->
-        <footer class="bg-slate-900 text-white py-10 mt-20 text-center">
-
-            <h2 class="text-3xl font-bold">
-                BelajarKUY
-            </h2>
-
-            <p class="mt-4 text-slate-400">
-                Platform pembelajaran online modern untuk masa depan lebih baik.
-            </p>
-
-            <p class="mt-6 text-slate-500 text-sm">
-                © 2026 BelajarKUY. All rights reserved.
-            </p>
-
-        </footer>
-
-    </div>
-
+    @stack('scripts')
 </body>
 </html>

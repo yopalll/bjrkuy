@@ -27,7 +27,7 @@
                 <div class="bg-white rounded-[2rem] border border-gray-100 p-8 shadow-sm space-y-8">
                     <h2 class="text-xl font-bold text-gray-900 border-b border-gray-50 pb-5">Pengaturan Keamanan</h2>
 
-                    <form action="{{ route('user.setting.update') }}" method="POST" class="space-y-6 max-w-xl">
+                    <form action="{{ route('student.setting.update') }}" method="POST" class="space-y-6 max-w-xl">
                         @csrf
 
                         <!-- Current Password -->

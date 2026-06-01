@@ -1,0 +1,5 @@
+# Large archive files - store locally, not in git
+*.zip
+*.tar.gz
+*.rar
+*.7z

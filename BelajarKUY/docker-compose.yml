@@ -1,0 +1,249 @@
+name: belajarkuy
+
+# ---------------------------------------------------------------------------
+# Shared definition for every PHP container (app, queue, scheduler, reverb).
+# They all run the SAME image built from target "app"; only the command and
+# RUN_MIGRATIONS differ.
+# ---------------------------------------------------------------------------
+x-php-environment: &php-environment
+  APP_ENV: production
+  APP_DEBUG: "false"
+
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_PORT: "3306"
+  DB_DATABASE: ${DB_DATABASE:-belajarkuy-prodj}
+  DB_USERNAME: ${DB_USERNAME:-belajarkuy}
+  DB_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set in .env}
+
+  REDIS_CLIENT: phpredis
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+
+  CACHE_STORE: redis
+  SESSION_DRIVER: redis
+  QUEUE_CONNECTION: redis
+  BROADCAST_CONNECTION: reverb
+
+  SCOUT_DRIVER: meilisearch
+  MEILISEARCH_HOST: http://meilisearch:7700
+  MEILISEARCH_KEY: ${MEILISEARCH_KEY:-masterKey}
+
+  # Server-side: PHP publishes events directly to the reverb container (internal).
+  # Browser-side: uses VITE_REVERB_* baked at build time (wss://belajarkuy.site:443).
+  REVERB_HOST: reverb
+  REVERB_PORT: "8080"
+  REVERB_SCHEME: http
+
+  REVERB_SCALING_ENABLED: "true"
+  RUN_MIGRATIONS: "false"
+
+x-php-app: &php-app
+  build:
+    context: .
+    target: app
+    args:
+      VITE_APP_NAME: ${APP_NAME:-BelajarKUY}
+      VITE_REVERB_APP_KEY: ${REVERB_APP_KEY:-belajarkuy-key}
+      VITE_REVERB_HOST: ${REVERB_HOST:-belajarkuy.site}
+      VITE_REVERB_PORT: ${REVERB_PORT:-80}
+      VITE_REVERB_SCHEME: ${REVERB_SCHEME:-http}
+  image: belajarkuy/app:latest
+  restart: unless-stopped
+  env_file: .env
+  volumes:
+    - app_storage:/var/www/html/storage
+    # GCS service-account key (mounted, never baked into the image).
+    - ./storage/app/gcp:/var/www/html/storage/app/gcp:ro
+  depends_on:
+    mysql:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    meilisearch:
+      condition: service_healthy
+  networks:
+    - belajarkuy
+
+services:
+  # --- Application (PHP-FPM) — also runs migrations on boot ---
+  app:
+    <<: *php-app
+    environment:
+      <<: *php-environment
+      RUN_MIGRATIONS: "true"
+
+  # --- Web server (Nginx) ---
+  web:
+    build:
+      context: .
+      target: web
+    image: belajarkuy/web:latest
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - app_storage:/var/www/html/storage:ro
+      # ACME webroot — dipakai untuk renew SSL via webroot (lihat catatan renew).
+      - ./docker/certbot/www:/var/www/certbot:ro
+      # SSL cert host (certbot di-host). Mount SELURUH /etc/letsencrypt agar
+      # symlink live/ -> archive/ tetap resolve di dalam container.
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - app
+      - reverb
+    networks:
+      belajarkuy:
+        # So server-side broadcasting to https://belajarkuy.site resolves
+        # internally to Nginx (which proxies /apps -> reverb).
+        aliases:
+          - belajarkuy.site
+          - www.belajarkuy.site
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/healthz >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+
+  # --- Queue worker ---
+  queue:
+    <<: *php-app
+    command: php artisan queue:work --tries=3 --sleep=3 --max-time=3600 --timeout=90
+    environment:
+      <<: *php-environment
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+  # --- Scheduler (runs artisan schedule every minute) ---
+  scheduler:
+    <<: *php-app
+    command: php artisan schedule:work
+    environment:
+      <<: *php-environment
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      app:
+        condition: service_started
+
+  # --- Reverb WebSocket server ---
+  reverb:
+    <<: *php-app
+    command: php artisan reverb:start --host=0.0.0.0 --port=8080
+    environment:
+      <<: *php-environment
+    expose:
+      - "8080"
+
+  # --- MySQL ---
+  mysql:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-belajarkuy-prodj}
+      MYSQL_USER: ${DB_USERNAME:-belajarkuy}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is not set in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-change-me-root}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # ports:
+    #   - "3306:3306"   # uncomment for host access (e.g. TablePlus)
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-change-me-root}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - belajarkuy
+
+  # --- Redis (cache / sessions / queue / reverb scaling) ---
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    networks:
+      - belajarkuy
+
+  # --- Meilisearch (Laravel Scout) ---
+  meilisearch:
+    image: getmeili/meilisearch:v1.16
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILISEARCH_KEY:-masterKey}
+      MEILI_ENV: production
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - meili_data:/meili_data
+    # ports:
+    #   - "7700:7700"   # uncomment for host access to the Meili dashboard/API
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:7700/health || wget -qO- http://localhost:7700/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - belajarkuy
+
+  # --- phpMyAdmin (admin only — NOT exposed to public) ---
+  # Tidak ikut "docker compose up" biasa (mengurangi attack surface). Jalankan
+  # hanya saat perlu:  docker compose --profile admin up -d phpmyadmin
+  # Selesai pakai:     docker compose --profile admin stop phpmyadmin
+  phpmyadmin:
+    image: phpmyadmin:5-apache
+    profiles: ["admin"]
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      UPLOAD_LIMIT: 128M
+    ports:
+      # Hanya bind ke localhost — akses via SSH tunnel, BUKAN dari internet.
+      # ssh -L 8888:localhost:8888 user@belajarkuy.site
+      # lalu buka: http://localhost:8888
+      - "127.0.0.1:8888:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - belajarkuy
+
+  # --- Certbot (optional, one-shot) — uncomment to issue/renew SSL ---
+  # certbot:
+  #   image: certbot/certbot
+  #   volumes:
+  #     - ./docker/certbot/conf:/etc/letsencrypt
+  #     - ./docker/certbot/www:/var/www/certbot
+  #   entrypoint: >-
+  #     certbot certonly --webroot -w /var/www/certbot
+  #     -d belajarkuy.site -d www.belajarkuy.site
+  #     --email viygo79@gmail.com --agree-tos --no-eff-email
+  #   networks:
+  #     - belajarkuy
+
+volumes:
+  app_storage:
+  mysql_data:
+  redis_data:
+  meili_data:
+
+networks:
+  belajarkuy:
+    driver: bridge

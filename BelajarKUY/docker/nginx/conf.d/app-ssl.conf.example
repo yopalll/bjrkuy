@@ -1,0 +1,112 @@
+# BelajarKUY — Nginx vhost WITH SSL.
+#
+# Use this AFTER you have generated Let's Encrypt certificates for
+# belajarkuy.site (see the "Enabling SSL" section in DOCKER.md).
+#
+# To activate:
+#   1. Generate the certs (certbot webroot -> ./docker/certbot/conf).
+#   2. Replace docker/nginx/conf.d/app.conf with this file's contents
+#      (rename app-ssl.conf.example -> app.conf), then rebuild the web image:
+#         docker compose build web && docker compose up -d web
+#   3. Uncomment "443:443" under the `web` service in docker-compose.yml.
+#   4. Set in .env:  APP_URL=https://belajarkuy.site
+#                    REVERB_PORT=443   REVERB_SCHEME=https
+#      and rebuild the app image so the Vite bundle points at wss://.
+
+upstream php_fpm {
+    server app:9000;
+}
+
+# --- HTTP: ACME + redirect everything else to HTTPS ---
+server {
+    listen 80;
+    listen [::]:80;
+    server_name belajarkuy.site www.belajarkuy.site;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# --- HTTPS ---
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    http2 on;
+    server_name belajarkuy.site www.belajarkuy.site;
+
+    ssl_certificate     /etc/letsencrypt/live/belajarkuy.site/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/belajarkuy.site/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+    ssl_ciphers         HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache   shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    root /var/www/html/public;
+    index index.php;
+
+    charset utf-8;
+    # Must be >= PHP post_max_size (1100M) — instructor videos stream through PHP.
+    client_max_body_size 1100M;
+    disable_symlinks off;
+
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+
+    location /app/ {
+        proxy_pass http://reverb:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    location /apps/ {
+        proxy_pass http://reverb:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        try_files $uri =404;
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass php_fpm;
+        fastcgi_index index.php;
+        include fastcgi_params;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        fastcgi_param DOCUMENT_ROOT $realpath_root;
+        fastcgi_param HTTPS on;
+        fastcgi_read_timeout 620;  # >= PHP max_execution_time (600s) + buffer
+    }
+
+    location ~* \.(?:css|js|mjs|jpg|jpeg|png|gif|ico|svg|webp|avif|woff2?|ttf|eot|map)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+        access_log off;
+        try_files $uri =404;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
